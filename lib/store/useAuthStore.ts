@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { UserProfile } from '../types';
 import { supabase, isSupabaseConfigured } from '../supabase/client';
+import { isFirebaseConfigured, loginWithFirebaseGoogle, logoutFirebase } from '../firebase/config';
 
 export const DEFAULT_ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'pcgowshik@gmail.com';
 export const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'ApexStudio@2026!X';
@@ -100,7 +101,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           });
           return { success: true };
         } else if (error) {
-          // If Supabase returns explicit error, return it
           set({ isLoading: false });
           return { success: false, error: error.message };
         }
@@ -147,7 +147,43 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signInWithGoogle: async () => {
     set({ isLoading: true });
 
-    // 1. Supabase Cloud Google OAuth
+    // 1. Firebase Google Auth Popup (Primary when Firebase configured)
+    if (isFirebaseConfigured) {
+      try {
+        const fbUser = await loginWithFirebaseGoogle();
+        if (fbUser) {
+          const profile: UserProfile = {
+            id: fbUser.uid,
+            email: fbUser.email || 'google.creator@atomic-apex.ai',
+            fullName: fbUser.displayName || 'Google Creator',
+            avatarUrl: fbUser.photoURL || DEFAULT_ADMIN_PROFILE.avatarUrl,
+            credits: 100,
+            role: fbUser.email?.toLowerCase() === DEFAULT_ADMIN_EMAIL.toLowerCase() ? 'admin' : 'creator',
+            createdAt: new Date().toISOString(),
+          };
+
+          const token = await fbUser.getIdToken();
+          setSessionCookie(token);
+
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('apex_session_user', JSON.stringify(profile));
+          }
+
+          set({
+            user: profile,
+            isAuthenticated: true,
+            isLoading: false,
+            ssoToken: token,
+          });
+          return { success: true };
+        }
+      } catch (err: any) {
+        set({ isLoading: false });
+        return { success: false, error: err?.message || 'Firebase Google Sign In failed' };
+      }
+    }
+
+    // 2. Supabase Cloud Google OAuth (Fallback if Supabase configured)
     if (isSupabaseConfigured && supabase) {
       try {
         const redirectTo = typeof window !== 'undefined'
@@ -172,11 +208,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return { success: true };
       } catch (err: any) {
         set({ isLoading: false });
-        return { success: false, error: err?.message || 'Failed to initialize Google OAuth' };
+        return { success: false, error: err?.message || 'Google OAuth failed' };
       }
     }
 
-    // 2. Local Mode Google Sign In Simulation (instant access for testing/preview)
+    // 3. Instant Dev Mode Simulation (Runs out of the box before API keys are added)
     const googleProfile: UserProfile = {
       id: 'u-google-' + Math.random().toString(36).substring(2, 10),
       email: 'creator.google@atomic-apex.ai',
@@ -253,6 +289,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   signOut: async () => {
+    await logoutFirebase();
     if (isSupabaseConfigured && supabase) {
       try {
         await supabase.auth.signOut();
@@ -322,7 +359,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
     }
 
-    // 3. User is genuinely unauthenticated
+    // 3. User is unauthenticated
     clearSessionCookie();
     set({
       user: null,
