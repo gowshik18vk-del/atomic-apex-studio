@@ -27,23 +27,18 @@ export function middleware(request: NextRequest) {
     (route) => pathname === route || pathname.startsWith(`${route}/`)
   );
 
-  // Check cookies for Supabase or session token
-  const hasSupabaseCookie = request.cookies
-    .getAll()
-    .some((c) => c.name.startsWith('sb-') && c.name.endsWith('-auth-token'));
+  // Check cookies for session token
   const hasApexSession = request.cookies.has('apex_session_token');
 
-  const isAuthenticated = hasSupabaseCookie || hasApexSession;
-
   // If visiting protected route while signed out -> redirect to /login
-  if (isProtected && !isAuthenticated) {
+  if (isProtected && !hasApexSession) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // If visiting login/signup while already authenticated -> redirect to /dashboard
-  if ((pathname === '/login' || pathname === '/signup') && isAuthenticated) {
+  // If visiting login/signup/forgot-password while already authenticated -> redirect to /dashboard
+  if ((pathname === '/login' || pathname === '/signup' || pathname === '/forgot-password') && hasApexSession) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
@@ -61,5 +56,6 @@ export const config = {
     '/settings/:path*',
     '/login',
     '/signup',
+    '/forgot-password',
   ],
 };

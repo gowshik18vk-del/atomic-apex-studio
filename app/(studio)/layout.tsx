@@ -7,6 +7,7 @@ import { useAuthStore } from '@/lib/store/useAuthStore';
 import { useGenerationStore } from '@/lib/store/useGenerationStore';
 import { useCreditsStore } from '@/lib/store/useCreditsStore';
 import AssetModal from '@/components/assets/AssetModal';
+import { Loader2 } from 'lucide-react';
 
 export default function StudioLayout({
   children,
@@ -15,7 +16,7 @@ export default function StudioLayout({
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { checkSession, isAuthenticated } = useAuthStore();
+  const { checkSession, isAuthenticated, isLoading } = useAuthStore();
   const { initialize } = useGenerationStore();
   const { syncWithDatabase } = useCreditsStore();
 
@@ -24,6 +25,21 @@ export default function StudioLayout({
     initialize();
     syncWithDatabase();
   }, []);
+
+  // Prevent flash of private content or login page while session resolves
+  if (isLoading && !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-studio-950 flex flex-col items-center justify-center space-y-4">
+        <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#C9A25E] to-amber-200 text-black shadow-glow-gold animate-pulse">
+          <span className="font-display text-2xl font-black">A</span>
+        </div>
+        <div className="flex items-center gap-2 text-xs font-mono text-zinc-400">
+          <Loader2 size={14} className="animate-spin text-[#C9A25E]" />
+          <span>Authenticating Atomic Session...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-studio-950 text-foreground flex">

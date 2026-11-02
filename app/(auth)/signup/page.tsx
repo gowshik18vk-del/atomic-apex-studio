@@ -11,6 +11,10 @@ import {
   ShieldCheck,
   Zap,
   Loader2,
+  CheckCircle2,
+  AlertCircle,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/useAuthStore';
 import { triggerConfetti } from '@/lib/utils';
@@ -44,7 +48,11 @@ export default function SignUpPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [successNotice, setSuccessNotice] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const handleGoogleSignUp = async () => {
@@ -70,8 +78,13 @@ export default function SignUpPage() {
     e.preventDefault();
     setErrorMsg('');
 
-    if (!email || !password) {
-      setErrorMsg('Please fill in all required fields.');
+    if (!name.trim()) {
+      setErrorMsg('Please enter your full name.');
+      return;
+    }
+
+    if (!email.trim() || !email.includes('@')) {
+      setErrorMsg('Please enter a valid email address.');
       return;
     }
 
@@ -80,10 +93,18 @@ export default function SignUpPage() {
       return;
     }
 
+    if (password !== confirmPassword) {
+      setErrorMsg('Passwords do not match. Please ensure both fields are identical.');
+      return;
+    }
+
     const res = await signUp(email, password, name);
     if (res.success) {
       triggerConfetti();
-      window.location.href = '/dashboard';
+      setSuccessNotice(true);
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 1500);
     } else {
       setErrorMsg(res.error || 'Failed to create account.');
     }
@@ -91,29 +112,42 @@ export default function SignUpPage() {
 
   return (
     <div className="relative min-h-screen bg-studio-950 flex items-center justify-center p-4 overflow-hidden">
-      <div className="absolute top-1/4 left-1/4 -mt-24 h-96 w-96 rounded-full bg-apex-lime/10 blur-3xl pointer-events-none" />
+      {/* Background Glows */}
+      <div className="absolute top-1/4 left-1/4 -mt-24 h-96 w-96 rounded-full bg-[#C9A25E]/10 blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 -mb-24 h-96 w-96 rounded-full bg-apex-cyan/10 blur-3xl pointer-events-none" />
 
       <div className="relative z-10 w-full max-w-md space-y-6">
+        {/* Brand Header */}
         <div className="text-center space-y-2">
           <Link href="/" className="inline-flex items-center gap-2.5">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-apex-lime to-emerald-400 text-black shadow-glow-lime">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#C9A25E] to-amber-200 text-black shadow-glow-gold">
               <span className="font-display text-2xl font-black">A</span>
             </div>
             <span className="font-display text-xl font-bold tracking-tight text-white">
-              ATOMIC APEX <span className="text-apex-lime">STUDIO</span>
+              ATOMIC APEX <span className="text-[#C9A25E]">STUDIO</span>
             </span>
           </Link>
           <p className="text-xs text-zinc-400">
-            Create your creator account and receive 100 free generation credits instantly.
+            Create your creator account and receive 100 generation credits.
           </p>
         </div>
 
+        {/* Main Card */}
         <div className="rounded-3xl border border-white/10 bg-studio-900/80 p-6 sm:p-8 shadow-2xl backdrop-blur-xl space-y-5">
           {errorMsg && (
             <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400 flex items-start gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-red-400 mt-1.5 flex-shrink-0" />
+              <AlertCircle size={15} className="mt-0.5 flex-shrink-0" />
               <span>{errorMsg}</span>
+            </div>
+          )}
+
+          {successNotice && (
+            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-400 flex items-start gap-2">
+              <CheckCircle2 size={15} className="mt-0.5 flex-shrink-0 text-emerald-400" />
+              <div>
+                <p className="font-semibold">Account created successfully!</p>
+                <p className="text-[11px] opacity-90">A verification link has been sent to your email. Redirecting to studio dashboard...</p>
+              </div>
             </div>
           )}
 
@@ -121,11 +155,11 @@ export default function SignUpPage() {
           <button
             type="button"
             onClick={handleGoogleSignUp}
-            disabled={isLoading || isGoogleLoading}
-            className="w-full py-3 px-4 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-white text-xs font-semibold flex items-center justify-center gap-2.5 transition-all shadow-sm group hover:border-white/30"
+            disabled={isLoading || isGoogleLoading || successNotice}
+            className="w-full py-3 px-4 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-white text-xs font-semibold flex items-center justify-center gap-2.5 transition-all shadow-sm group hover:border-[#C9A25E]/50"
           >
             {isGoogleLoading ? (
-              <Loader2 size={16} className="animate-spin text-apex-lime" />
+              <Loader2 size={16} className="animate-spin text-[#C9A25E]" />
             ) : (
               <GoogleIcon className="h-4 w-4 flex-shrink-0 transition-transform group-hover:scale-110" />
             )}
@@ -143,7 +177,7 @@ export default function SignUpPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="text-[11px] font-semibold text-zinc-300 uppercase tracking-wider block mb-1">
-                Your Name
+                Full Name
               </label>
               <div className="relative">
                 <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
@@ -151,8 +185,9 @@ export default function SignUpPage() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Alex Morgan"
-                  className="w-full rounded-xl border border-white/10 bg-studio-950 py-2.5 pl-10 pr-4 text-xs text-white placeholder-zinc-500 focus:border-apex-lime/60 focus:outline-none transition-colors"
+                  placeholder="Gowshik Creator"
+                  required
+                  className="w-full rounded-xl border border-white/10 bg-studio-950 py-2.5 pl-10 pr-4 text-xs text-white placeholder-zinc-500 focus:border-[#C9A25E] focus:outline-none transition-colors"
                 />
               </div>
             </div>
@@ -167,9 +202,9 @@ export default function SignUpPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
+                  placeholder="name@gmail.com"
                   required
-                  className="w-full rounded-xl border border-white/10 bg-studio-950 py-2.5 pl-10 pr-4 text-xs text-white placeholder-zinc-500 focus:border-apex-lime/60 focus:outline-none transition-colors"
+                  className="w-full rounded-xl border border-white/10 bg-studio-950 py-2.5 pl-10 pr-4 text-xs text-white placeholder-zinc-500 focus:border-[#C9A25E] focus:outline-none transition-colors"
                 />
               </div>
             </div>
@@ -181,32 +216,77 @@ export default function SignUpPage() {
               <div className="relative">
                 <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="At least 6 characters"
                   required
-                  className="w-full rounded-xl border border-white/10 bg-studio-950 py-2.5 pl-10 pr-4 text-xs text-white placeholder-zinc-500 focus:border-apex-lime/60 focus:outline-none transition-colors"
+                  className="w-full rounded-xl border border-white/10 bg-studio-950 py-2.5 pl-10 pr-10 text-xs text-white placeholder-zinc-500 focus:border-[#C9A25E] focus:outline-none transition-colors"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+                >
+                  {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-semibold text-zinc-300 uppercase tracking-wider block mb-1">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Repeat your password"
+                  required
+                  className="w-full rounded-xl border border-white/10 bg-studio-950 py-2.5 pl-10 pr-10 text-xs text-white placeholder-zinc-500 focus:border-[#C9A25E] focus:outline-none transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+                >
+                  {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
               </div>
             </div>
 
             <button
               type="submit"
-              disabled={isLoading || isGoogleLoading}
-              className="w-full py-3 rounded-xl glow-btn text-xs font-bold flex items-center justify-center gap-2 mt-2 shadow-glow-lime disabled:opacity-50"
+              disabled={isLoading || isGoogleLoading || successNotice}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-[#C9A25E] to-amber-300 hover:from-[#B8904D] hover:to-amber-200 text-black font-bold text-xs flex items-center justify-center gap-2 mt-2 shadow-glow-gold transition-all disabled:opacity-50"
             >
-              <Zap size={14} className="fill-current" />
-              {isLoading && !isGoogleLoading ? 'Creating Account...' : 'Get Started with 100 Credits'}
+              {isLoading && !isGoogleLoading ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" />
+                  Creating Account...
+                </>
+              ) : (
+                <>
+                  <Zap size={14} className="fill-current" />
+                  Create Account with 100 Credits
+                </>
+              )}
             </button>
           </form>
 
           <p className="text-center text-[11px] text-zinc-500 pt-1">
             Already have an account?{' '}
-            <Link href="/login" className="text-apex-lime hover:underline font-semibold">
+            <Link href="/login" className="text-[#C9A25E] hover:underline font-semibold">
               Sign In
             </Link>
           </p>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center text-[10px] text-zinc-600 font-mono">
+          Firebase Authentication • Real Email & Password Registration
         </div>
       </div>
     </div>

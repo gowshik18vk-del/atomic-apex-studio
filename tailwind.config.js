@@ -32,6 +32,9 @@ module.exports = {
           'cyan-dim': 'rgba(0, 240, 255, 0.12)',
           purple: '#a855f7',
           'purple-dim': 'rgba(168, 85, 247, 0.12)',
+          gold: '#C9A25E',
+          'gold-hover': '#D4B375',
+          'gold-dim': 'rgba(201, 162, 94, 0.15)',
         },
         card: {
           DEFAULT: '#111115',
@@ -45,6 +48,7 @@ module.exports = {
         display: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
       },
       boxShadow: {
+        'glow-gold': '0 0 25px -5px rgba(201, 162, 94, 0.4)',
         'glow-lime': '0 0 25px -5px rgba(204, 255, 0, 0.35)',
         'glow-cyan': '0 0 25px -5px rgba(0, 240, 255, 0.35)',
         'glow-subtle': '0 0 20px -2px rgba(204, 255, 0, 0.15)',

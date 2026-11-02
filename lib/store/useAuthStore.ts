@@ -1,8 +1,25 @@
 // lib/store/useAuthStore.ts
 import { create } from 'zustand';
 import { UserProfile } from '../types';
-import { supabase, isSupabaseConfigured } from '../supabase/client';
-import { isFirebaseConfigured, loginWithFirebaseGoogle, logoutFirebase } from '../firebase/config';
+import {
+  auth,
+  googleProvider,
+  isFirebaseConfigured,
+  formatFirebaseAuthError,
+  syncFirestoreProfile,
+  getFirestoreProfile,
+} from '../firebase/config';
+import {
+  signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile as fbUpdateProfile,
+  sendEmailVerification as fbSendEmailVerification,
+  sendPasswordResetEmail as fbSendPasswordResetEmail,
+  signOut as fbSignOut,
+  onAuthStateChanged,
+  type User as FirebaseUser,
+} from 'firebase/auth';
 
 export const DEFAULT_ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'pcgowshik@gmail.com';
 export const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'ApexStudio@2026!X';
@@ -25,6 +42,7 @@ interface AuthState {
   signIn: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
   signInWithGoogle: () => Promise<{ success: boolean; error?: string }>;
   signUp: (email: string, pass: string, name?: string) => Promise<{ success: boolean; error?: string }>;
+  sendPasswordReset: (email: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   checkSession: () => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => void;
@@ -42,6 +60,8 @@ function clearSessionCookie() {
   }
 }
 
+let authListenerInitialized = false;
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
@@ -52,68 +72,50 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true });
     const cleanEmail = email.trim().toLowerCase();
 
-    // 1. Supabase Cloud Sign In
-    if (isSupabaseConfigured && supabase) {
+    // 1. Firebase Email & Password Authentication
+    if (isFirebaseConfigured && auth) {
       try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: cleanEmail,
-          password: pass,
+        const cred = await signInWithEmailAndPassword(auth, cleanEmail, pass);
+        const fbUser = cred.user;
+
+        // Sync and get profile from Firestore
+        const dbProfile = await syncFirestoreProfile(fbUser);
+
+        const profile: UserProfile = {
+          id: fbUser.uid,
+          email: fbUser.email || cleanEmail,
+          fullName: (dbProfile as any)?.fullName || fbUser.displayName || cleanEmail.split('@')[0],
+          avatarUrl: fbUser.photoURL || DEFAULT_ADMIN_PROFILE.avatarUrl,
+          credits: (dbProfile as any)?.credits ?? 100,
+          role: cleanEmail === DEFAULT_ADMIN_EMAIL.toLowerCase() ? 'admin' : 'creator',
+          createdAt: fbUser.metadata.creationTime || new Date().toISOString(),
+        };
+
+        const token = await fbUser.getIdToken();
+        setSessionCookie(token);
+
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('apex_session_user', JSON.stringify(profile));
+        }
+
+        set({
+          user: profile,
+          isAuthenticated: true,
+          isLoading: false,
+          ssoToken: token,
         });
 
-        if (!error && data.user) {
-          let profile: UserProfile = {
-            id: data.user.id,
-            email: data.user.email || cleanEmail,
-            fullName: data.user.user_metadata?.full_name || 'Apex Creator',
-            avatarUrl: data.user.user_metadata?.avatar_url || DEFAULT_ADMIN_PROFILE.avatarUrl,
-            credits: 100,
-            role: cleanEmail === DEFAULT_ADMIN_EMAIL.toLowerCase() ? 'admin' : 'creator',
-            createdAt: data.user.created_at,
-          };
-
-          const { data: dbProfile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', data.user.id)
-            .single();
-
-          if (dbProfile) {
-            profile = {
-              ...profile,
-              fullName: dbProfile.display_name || profile.fullName,
-              avatarUrl: dbProfile.avatar_url || profile.avatarUrl,
-              credits: dbProfile.credits ?? 100,
-            };
-          }
-
-          const token = data.session?.access_token || 'apex-token-' + Date.now();
-          setSessionCookie(token);
-
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('apex_session_user', JSON.stringify(profile));
-          }
-
-          set({
-            user: profile,
-            isAuthenticated: true,
-            isLoading: false,
-            ssoToken: token,
-          });
-          return { success: true };
-        } else if (error) {
-          set({ isLoading: false });
-          return { success: false, error: error.message };
-        }
+        return { success: true };
       } catch (err: any) {
         set({ isLoading: false });
-        return { success: false, error: err?.message || 'Authentication error' };
+        return { success: false, error: formatFirebaseAuthError(err) };
       }
     }
 
-    // 2. Local Auth Mode (Offline development / seed fallback)
+    // 2. Offline / Developer Fallback Mode
     if (cleanEmail && pass.length >= 6) {
       const isFounder = cleanEmail === DEFAULT_ADMIN_EMAIL.toLowerCase();
-      
+
       const profile: UserProfile = {
         id: isFounder ? DEFAULT_ADMIN_PROFILE.id : 'u-' + Math.random().toString(36).substring(2, 9),
         email: cleanEmail,
@@ -137,6 +139,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isLoading: false,
         ssoToken: token,
       });
+
       return { success: true };
     }
 
@@ -147,72 +150,47 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signInWithGoogle: async () => {
     set({ isLoading: true });
 
-    // 1. Firebase Google Auth Popup (Primary when Firebase configured)
-    if (isFirebaseConfigured) {
+    // 1. Firebase Google OAuth with native popup
+    if (isFirebaseConfigured && auth) {
       try {
-        const fbUser = await loginWithFirebaseGoogle();
-        if (fbUser) {
-          const profile: UserProfile = {
-            id: fbUser.uid,
-            email: fbUser.email || 'google.creator@atomic-apex.ai',
-            fullName: fbUser.displayName || 'Google Creator',
-            avatarUrl: fbUser.photoURL || DEFAULT_ADMIN_PROFILE.avatarUrl,
-            credits: 100,
-            role: fbUser.email?.toLowerCase() === DEFAULT_ADMIN_EMAIL.toLowerCase() ? 'admin' : 'creator',
-            createdAt: new Date().toISOString(),
-          };
+        const result = await signInWithPopup(auth, googleProvider);
+        const fbUser = result.user;
 
-          const token = await fbUser.getIdToken();
-          setSessionCookie(token);
+        // Auto-create or sync user document in Firestore on first sign-in
+        const dbProfile = await syncFirestoreProfile(fbUser);
 
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('apex_session_user', JSON.stringify(profile));
-          }
+        const profile: UserProfile = {
+          id: fbUser.uid,
+          email: fbUser.email || '',
+          fullName: fbUser.displayName || (dbProfile as any)?.fullName || 'Apex Creator',
+          avatarUrl: fbUser.photoURL || DEFAULT_ADMIN_PROFILE.avatarUrl,
+          credits: (dbProfile as any)?.credits ?? 100,
+          role: fbUser.email?.toLowerCase() === DEFAULT_ADMIN_EMAIL.toLowerCase() ? 'admin' : 'creator',
+          createdAt: fbUser.metadata.creationTime || new Date().toISOString(),
+        };
 
-          set({
-            user: profile,
-            isAuthenticated: true,
-            isLoading: false,
-            ssoToken: token,
-          });
-          return { success: true };
+        const token = await fbUser.getIdToken();
+        setSessionCookie(token);
+
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('apex_session_user', JSON.stringify(profile));
         }
-      } catch (err: any) {
-        set({ isLoading: false });
-        return { success: false, error: err?.message || 'Firebase Google Sign In failed' };
-      }
-    }
 
-    // 2. Supabase Cloud Google OAuth (Fallback if Supabase configured)
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const redirectTo = typeof window !== 'undefined'
-          ? `${window.location.origin}/auth/callback`
-          : undefined;
-
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo,
-            queryParams: {
-              access_type: 'offline',
-              prompt: 'consent',
-            },
-          },
+        set({
+          user: profile,
+          isAuthenticated: true,
+          isLoading: false,
+          ssoToken: token,
         });
 
-        if (error) {
-          set({ isLoading: false });
-          return { success: false, error: error.message };
-        }
         return { success: true };
       } catch (err: any) {
         set({ isLoading: false });
-        return { success: false, error: err?.message || 'Google OAuth failed' };
+        return { success: false, error: formatFirebaseAuthError(err) };
       }
     }
 
-    // 3. Instant Dev Mode Simulation (Runs out of the box before API keys are added)
+    // 2. Offline Dev Mode Simulation (instant access before live keys are added)
     const googleProfile: UserProfile = {
       id: 'u-google-' + Math.random().toString(36).substring(2, 10),
       email: 'creator.google@atomic-apex.ai',
@@ -244,23 +222,61 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true });
     const cleanEmail = email.trim().toLowerCase();
 
-    if (isSupabaseConfigured && supabase) {
+    // 1. Firebase Email Registration
+    if (isFirebaseConfigured && auth) {
       try {
-        const { data, error } = await supabase.auth.signUp({
-          email: cleanEmail,
-          password: pass,
-          options: { data: { full_name: name || 'Apex Creator' } },
-        });
-        if (error) {
-          set({ isLoading: false });
-          return { success: false, error: error.message };
+        const cred = await createUserWithEmailAndPassword(auth, cleanEmail, pass);
+        const fbUser = cred.user;
+
+        // Set user's full name in Firebase Auth
+        if (name) {
+          try {
+            await fbUpdateProfile(fbUser, { displayName: name });
+          } catch (pErr) {}
         }
+
+        // Send email verification
+        try {
+          await fbSendEmailVerification(fbUser);
+        } catch (vErr) {
+          console.warn('Email verification notification:', vErr);
+        }
+
+        // Save profile in Firestore users/{uid}
+        await syncFirestoreProfile(fbUser, { fullName: name });
+
+        const profile: UserProfile = {
+          id: fbUser.uid,
+          email: cleanEmail,
+          fullName: name || cleanEmail.split('@')[0],
+          avatarUrl: DEFAULT_ADMIN_PROFILE.avatarUrl,
+          credits: 100,
+          role: 'creator',
+          createdAt: new Date().toISOString(),
+        };
+
+        const token = await fbUser.getIdToken();
+        setSessionCookie(token);
+
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('apex_session_user', JSON.stringify(profile));
+        }
+
+        set({
+          user: profile,
+          isAuthenticated: true,
+          isLoading: false,
+          ssoToken: token,
+        });
+
+        return { success: true };
       } catch (err: any) {
         set({ isLoading: false });
-        return { success: false, error: err?.message || 'Sign up failed' };
+        return { success: false, error: formatFirebaseAuthError(err) };
       }
     }
 
+    // 2. Offline Dev Mode Fallback
     const newProfile: UserProfile = {
       id: 'u-' + Math.random().toString(36).substring(2, 9),
       email: cleanEmail,
@@ -288,18 +304,38 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     return { success: true };
   },
 
-  signOut: async () => {
-    await logoutFirebase();
-    if (isSupabaseConfigured && supabase) {
+  sendPasswordReset: async (email: string) => {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) {
+      return { success: false, error: 'Please enter a valid email address.' };
+    }
+
+    if (isFirebaseConfigured && auth) {
       try {
-        await supabase.auth.signOut();
+        await fbSendPasswordResetEmail(auth, cleanEmail);
+        return { success: true };
+      } catch (err: any) {
+        return { success: false, error: formatFirebaseAuthError(err) };
+      }
+    }
+
+    // Offline simulation response
+    return { success: true };
+  },
+
+  signOut: async () => {
+    if (auth) {
+      try {
+        await fbSignOut(auth);
       } catch (err) {}
     }
+
     clearSessionCookie();
     if (typeof window !== 'undefined') {
       localStorage.removeItem('apex_session_user');
       sessionStorage.clear();
     }
+
     set({
       user: null,
       isAuthenticated: false,
@@ -315,33 +351,67 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   checkSession: async () => {
     set({ isLoading: true });
 
-    // 1. Check Supabase session if configured
-    if (isSupabaseConfigured && supabase) {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
+    // Initialize real-time Firebase Auth listener if available
+    if (isFirebaseConfigured && auth && !authListenerInitialized) {
+      authListenerInitialized = true;
+      onAuthStateChanged(auth, async (fbUser: FirebaseUser | null) => {
+        if (fbUser) {
+          const dbProfile = await getFirestoreProfile(fbUser.uid);
           const profile: UserProfile = {
-            id: session.user.id,
-            email: session.user.email || '',
-            fullName: session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'Apex Creator',
-            avatarUrl: session.user.user_metadata?.avatar_url || DEFAULT_ADMIN_PROFILE.avatarUrl,
-            credits: 100,
-            role: session.user.email === DEFAULT_ADMIN_EMAIL ? 'admin' : 'creator',
-            createdAt: session.user.created_at,
+            id: fbUser.uid,
+            email: fbUser.email || '',
+            fullName: (dbProfile as any)?.fullName || fbUser.displayName || 'Apex Creator',
+            avatarUrl: fbUser.photoURL || DEFAULT_ADMIN_PROFILE.avatarUrl,
+            credits: (dbProfile as any)?.credits ?? 100,
+            role: (fbUser.email?.toLowerCase() === DEFAULT_ADMIN_EMAIL.toLowerCase() || (dbProfile as any)?.role === 'admin') ? 'admin' : 'creator',
+            createdAt: fbUser.metadata.creationTime || new Date().toISOString(),
           };
-          setSessionCookie(session.access_token);
+
+          const token = await fbUser.getIdToken();
+          setSessionCookie(token);
+
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('apex_session_user', JSON.stringify(profile));
+          }
+
           set({
             user: profile,
             isAuthenticated: true,
-            ssoToken: session.access_token,
+            ssoToken: token,
             isLoading: false,
           });
-          return;
+        } else {
+          // If no Firebase user, check if local storage has an offline dev session
+          if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem('apex_session_user');
+            if (stored && !isFirebaseConfigured) {
+              try {
+                const localUser = JSON.parse(stored);
+                setSessionCookie('apex-restored-session');
+                set({
+                  user: localUser,
+                  isAuthenticated: true,
+                  ssoToken: 'apex-session-active',
+                  isLoading: false,
+                });
+                return;
+              } catch (e) {}
+            }
+          }
+
+          clearSessionCookie();
+          set({
+            user: null,
+            isAuthenticated: false,
+            ssoToken: null,
+            isLoading: false,
+          });
         }
-      } catch (e) {}
+      });
+      return;
     }
 
-    // 2. Check localStorage session
+    // 2. Check localStorage session if Firebase is not active
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('apex_session_user');
       if (stored) {

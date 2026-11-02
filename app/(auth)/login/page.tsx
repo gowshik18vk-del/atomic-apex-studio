@@ -12,6 +12,8 @@ import {
   Eye,
   EyeOff,
   Loader2,
+  KeyRound,
+  AlertCircle,
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/useAuthStore';
 import { triggerConfetti } from '@/lib/utils';
@@ -62,7 +64,6 @@ export default function LoginPage() {
       const res = await signInWithGoogle();
       if (res.success) {
         triggerConfetti();
-        // Full browser navigation ensures session cookies are recognized by middleware immediately
         window.location.href = '/dashboard';
       } else {
         setErrorMsg(res.error || 'Failed to authenticate with Google.');
@@ -86,7 +87,6 @@ export default function LoginPage() {
     const res = await signIn(email, password);
     if (res.success) {
       triggerConfetti();
-      // Full browser navigation guarantees all cookies are committed
       window.location.href = '/dashboard';
     } else {
       setErrorMsg(res.error || 'Authentication failed. Please verify credentials.');
@@ -96,32 +96,32 @@ export default function LoginPage() {
   return (
     <div className="relative min-h-screen bg-studio-950 flex items-center justify-center p-4 overflow-hidden">
       {/* Background Ambient Glows */}
-      <div className="absolute top-1/4 left-1/4 -mt-24 h-96 w-96 rounded-full bg-apex-lime/10 blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 -mt-24 h-96 w-96 rounded-full bg-[#C9A25E]/10 blur-3xl pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 -mb-24 h-96 w-96 rounded-full bg-apex-cyan/10 blur-3xl pointer-events-none" />
 
       <div className="relative z-10 w-full max-w-md space-y-6">
         {/* Brand Header */}
         <div className="text-center space-y-2">
           <Link href="/" className="inline-flex items-center gap-2.5">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-apex-lime to-emerald-400 text-black shadow-glow-lime">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#C9A25E] to-amber-200 text-black shadow-glow-gold">
               <span className="font-display text-2xl font-black">A</span>
             </div>
             <span className="font-display text-xl font-bold tracking-tight text-white">
-              ATOMIC APEX <span className="text-apex-lime">STUDIO</span>
+              ATOMIC APEX <span className="text-[#C9A25E]">STUDIO</span>
             </span>
           </Link>
           <p className="text-xs text-zinc-400">
-            Sign in once to access the entire AI creative studio suite.
+            Sign in to access your cinematic creation suite.
           </p>
         </div>
 
         {/* Demo Seeded User Shortcut Card */}
-        <div className="rounded-2xl border border-apex-lime/30 bg-studio-900/90 p-4 shadow-glass-card space-y-2.5">
+        <div className="rounded-2xl border border-[#C9A25E]/30 bg-studio-900/90 p-4 shadow-glass-card space-y-2.5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-white flex items-center gap-1.5">
-              <ShieldCheck size={14} className="text-apex-lime" /> Founder Account Access
+              <ShieldCheck size={14} className="text-[#C9A25E]" /> Founder Account Access
             </span>
-            <span className="rounded bg-apex-lime/15 px-1.5 py-0.5 text-[9px] font-mono font-bold text-apex-lime uppercase">
+            <span className="rounded bg-[#C9A25E]/15 px-1.5 py-0.5 text-[9px] font-mono font-bold text-[#C9A25E] uppercase border border-[#C9A25E]/30">
               100 CREDITS
             </span>
           </div>
@@ -133,7 +133,7 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={handleFillFounder}
-            className="w-full py-1.5 px-3 rounded-xl bg-apex-lime/10 hover:bg-apex-lime hover:text-black text-apex-lime text-xs font-semibold border border-apex-lime/30 flex items-center justify-center gap-1.5 transition-all"
+            className="w-full py-1.5 px-3 rounded-xl bg-[#C9A25E]/10 hover:bg-[#C9A25E] hover:text-black text-[#C9A25E] text-xs font-semibold border border-[#C9A25E]/30 flex items-center justify-center gap-1.5 transition-all"
           >
             <Zap size={12} className="fill-current" /> Autofill Founder Credentials
           </button>
@@ -143,7 +143,7 @@ export default function LoginPage() {
         <div className="rounded-3xl border border-white/10 bg-studio-900/80 p-6 sm:p-8 shadow-2xl backdrop-blur-xl space-y-5">
           {errorMsg && (
             <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400 flex items-start gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-red-400 mt-1.5 flex-shrink-0" />
+              <AlertCircle size={15} className="mt-0.5 flex-shrink-0" />
               <span>{errorMsg}</span>
             </div>
           )}
@@ -153,10 +153,10 @@ export default function LoginPage() {
             type="button"
             onClick={handleGoogleSignIn}
             disabled={isLoading || isGoogleLoading}
-            className="w-full py-3 px-4 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-white text-xs font-semibold flex items-center justify-center gap-2.5 transition-all shadow-sm group hover:border-white/30"
+            className="w-full py-3 px-4 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-white text-xs font-semibold flex items-center justify-center gap-2.5 transition-all shadow-sm group hover:border-[#C9A25E]/50"
           >
             {isGoogleLoading ? (
-              <Loader2 size={16} className="animate-spin text-apex-lime" />
+              <Loader2 size={16} className="animate-spin text-[#C9A25E]" />
             ) : (
               <GoogleIcon className="h-4 w-4 flex-shrink-0 transition-transform group-hover:scale-110" />
             )}
@@ -167,7 +167,7 @@ export default function LoginPage() {
           <div className="relative flex items-center justify-center">
             <div className="w-full border-t border-white/10" />
             <span className="absolute bg-studio-900 px-3 text-[10px] font-mono uppercase tracking-wider text-zinc-500">
-              or continue with email
+              or sign in with email
             </span>
           </div>
 
@@ -185,7 +185,7 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
                   required
-                  className="w-full rounded-xl border border-white/10 bg-studio-950 py-2.5 pl-10 pr-4 text-xs text-white placeholder-zinc-500 focus:border-apex-lime/60 focus:outline-none transition-colors"
+                  className="w-full rounded-xl border border-white/10 bg-studio-950 py-2.5 pl-10 pr-4 text-xs text-white placeholder-zinc-500 focus:border-[#C9A25E] focus:outline-none transition-colors"
                 />
               </div>
             </div>
@@ -195,6 +195,12 @@ export default function LoginPage() {
                 <label className="text-[11px] font-semibold text-zinc-300 uppercase tracking-wider">
                   Password
                 </label>
+                <Link
+                  href="/forgot-password"
+                  className="text-[11px] text-[#C9A25E] hover:underline transition-colors"
+                >
+                  Forgot Password?
+                </Link>
               </div>
               <div className="relative">
                 <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
@@ -204,7 +210,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
                   required
-                  className="w-full rounded-xl border border-white/10 bg-studio-950 py-2.5 pl-10 pr-10 text-xs text-white placeholder-zinc-500 focus:border-apex-lime/60 focus:outline-none transition-colors"
+                  className="w-full rounded-xl border border-white/10 bg-studio-950 py-2.5 pl-10 pr-10 text-xs text-white placeholder-zinc-500 focus:border-[#C9A25E] focus:outline-none transition-colors"
                 />
                 <button
                   type="button"
@@ -219,7 +225,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading || isGoogleLoading}
-              className="w-full py-3 rounded-xl glow-btn text-xs font-bold flex items-center justify-center gap-2 mt-2 shadow-glow-lime disabled:opacity-50"
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-[#C9A25E] to-amber-300 hover:from-[#B8904D] hover:to-amber-200 text-black font-bold text-xs flex items-center justify-center gap-2 mt-2 shadow-glow-gold transition-all disabled:opacity-50"
             >
               {isLoading && !isGoogleLoading ? (
                 <>
@@ -237,7 +243,7 @@ export default function LoginPage() {
 
           <p className="text-center text-[11px] text-zinc-500 pt-1">
             Don't have an account?{' '}
-            <Link href="/signup" className="text-apex-lime hover:underline font-semibold">
+            <Link href="/signup" className="text-[#C9A25E] hover:underline font-semibold">
               Create an Account
             </Link>
           </p>
@@ -245,7 +251,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div className="text-center text-[10px] text-zinc-600 font-mono">
-          Single Sign-On • Supabase Auth • Pure Native Studio
+          Firebase Authentication • Secure Session • Atomic Apex Studio
         </div>
       </div>
     </div>

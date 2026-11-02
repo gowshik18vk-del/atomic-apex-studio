@@ -140,10 +140,14 @@ export default function Topbar({ collapsed, onOpenMobile }: TopbarProps) {
             >
               <div className="px-3 py-2 border-b border-white/5">
                 <p className="text-xs font-semibold text-white">{user?.fullName || 'Gowshik Admin'}</p>
-                <p className="text-[11px] text-zinc-400 font-mono truncate">{user?.email || 'pcgowshik@gmail.com'}</p>
-                <div className="mt-1.5 inline-flex items-center gap-1 rounded bg-apex-lime/15 px-1.5 py-0.5 text-[9px] font-bold text-apex-lime uppercase">
-                  <Shield size={10} />
-                  Seeded Admin / Founder
+                <p className="text-[11px] text-zinc-400 font-mono truncate">{user?.email || 'creator@atomic-apex.ai'}</p>
+                <div className={`mt-1.5 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${
+                  user?.role === 'admin'
+                    ? 'bg-[#C9A25E]/15 text-[#C9A25E] border border-[#C9A25E]/30'
+                    : 'bg-apex-cyan/15 text-apex-cyan border border-apex-cyan/30'
+                }`}>
+                  {user?.role === 'admin' ? <Shield size={10} /> : <Sparkles size={10} />}
+                  {user?.role === 'admin' ? 'Studio Founder / Admin' : 'Studio Creator'}
                 </div>
               </div>
 

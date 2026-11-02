@@ -1,6 +1,7 @@
 // lib/store/useCreditsStore.ts
 import { create } from 'zustand';
-import { supabase, isSupabaseConfigured } from '../supabase/client';
+import { db } from '../firebase/config';
+import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { useAuthStore } from './useAuthStore';
 
 interface CreditsState {
@@ -28,14 +29,10 @@ export const useCreditsStore = create<CreditsState>((set, get) => ({
       localStorage.setItem('apex_user_credits', updated.toString());
     }
 
-    // Sync with Supabase if user is logged in
+    // Sync with Firestore if user is logged in
     const user = useAuthStore.getState().user;
-    if (user && isSupabaseConfigured && supabase) {
-      supabase
-        .from('profiles')
-        .update({ credits: updated })
-        .eq('id', user.id)
-        .then(() => {});
+    if (user && db) {
+      updateDoc(doc(db, 'users', user.id), { credits: updated }).catch(() => {});
     }
 
     return true;
@@ -48,12 +45,8 @@ export const useCreditsStore = create<CreditsState>((set, get) => ({
       localStorage.setItem('apex_user_credits', updated.toString());
     }
     const user = useAuthStore.getState().user;
-    if (user && isSupabaseConfigured && supabase) {
-      supabase
-        .from('profiles')
-        .update({ credits: updated })
-        .eq('id', user.id)
-        .then(() => {});
+    if (user && db) {
+      updateDoc(doc(db, 'users', user.id), { credits: updated }).catch(() => {});
     }
   },
 
@@ -73,18 +66,19 @@ export const useCreditsStore = create<CreditsState>((set, get) => ({
     }
 
     const user = useAuthStore.getState().user;
-    if (user && isSupabaseConfigured && supabase) {
-      const { data } = await supabase
-        .from('profiles')
-        .select('credits')
-        .eq('id', user.id)
-        .single();
-      if (data && typeof data.credits === 'number') {
-        set({ credits: data.credits });
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('apex_user_credits', data.credits.toString());
+    if (user && db) {
+      try {
+        const snap = await getDoc(doc(db, 'users', user.id));
+        if (snap.exists()) {
+          const data = snap.data();
+          if (typeof data.credits === 'number') {
+            set({ credits: data.credits });
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('apex_user_credits', data.credits.toString());
+            }
+          }
         }
-      }
+      } catch (err) {}
     }
   },
 }));
