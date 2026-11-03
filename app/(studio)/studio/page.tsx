@@ -78,7 +78,7 @@ export default function CreatorStudioPage() {
 
       setComparisonResults({
         resultA: dataA.resultUrl || dataA.thumbUrl || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&auto=format&fit=crop&q=80',
-        resultB: dataB.resultUrl || dataB.thumbUrl || 'https://static-public-media.higgsfield.ai/cards/d6b970cb-8a24-41e6-8c83-023fd2ab585b.mp4',
+        resultB: dataB.resultUrl || dataB.thumbUrl || 'https://vjs.zencdn.net/v/oceans.mp4',
         modelAName: 'Apex Vision',
         modelBName: 'Swift V1',
       });

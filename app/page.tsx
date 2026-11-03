@@ -58,7 +58,7 @@ export default function LandingPage() {
   const router = useRouter();
   const { isAuthenticated, user } = useAuthStore();
   const [activeHeroVideo, setActiveHeroVideo] = useState(
-    'https://static-public-media.higgsfield.ai/cards/4c2bb5a7-ba39-464d-be1d-01de1c52dcaf.mp4'
+    'https://vjs.zencdn.net/v/oceans.mp4'
   );
   const [isMuted, setIsMuted] = useState(true);
   const [promptInput, setPromptInput] = useState('');
@@ -69,17 +69,17 @@ export default function LandingPage() {
     {
       title: 'Commercial Fluid Dynamics',
       engine: 'Apex Studio V1',
-      url: 'https://static-public-media.higgsfield.ai/cards/4c2bb5a7-ba39-464d-be1d-01de1c52dcaf.mp4',
+      url: 'https://vjs.zencdn.net/v/oceans.mp4',
     },
     {
       title: 'Cyberpunk Monolith Rain',
       engine: 'Apex Pixel Swift',
-      url: 'https://cdn.higgsfield.ai/card/16eebc9a-8310-4f68-8a02-1e2e6f109169.mp4',
+      url: 'https://test-videos.co.uk/vids/jellyfish/mp4/h264/720/Jellyfish_720_10s_1MB.mp4',
     },
     {
       title: 'High Velocity Canyon Rush',
       engine: 'Apex Range V2',
-      url: 'https://static-public-media.higgsfield.ai/cards/8dddb16b-6fe1-4cac-a11a-a650691a292d.mp4',
+      url: 'https://vjs.zencdn.net/v/oceans.mp4',
     },
   ];
 
@@ -491,8 +491,8 @@ export default function LandingPage() {
             {/* Video Preview Card */}
             <div className="relative w-full lg:w-96 aspect-video rounded-2xl overflow-hidden border border-white/15 bg-black shadow-2xl flex-shrink-0 group">
               <video
-                src="https://static-public-media.higgsfield.ai/cards/0019ff9b-e94d-4eec-893c-7ae8c953dc74.mp4"
-                poster="https://static.higgsfield.ai/kling-4.0/explore-banner-v2/landscape.webp"
+                src="https://vjs.zencdn.net/v/oceans.mp4"
+                poster="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1280&auto=format&fit=crop&q=85"
                 autoPlay
                 loop
                 muted

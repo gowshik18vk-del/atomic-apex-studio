@@ -38,7 +38,7 @@ To immediately test the application with founder privileges:
 - **Backend:** Next.js 15 API Routes (`/api/generate`, `/api/generations/[id]`, `/api/models`, `/api/chat`, `/api/runner`, `/api/credits`, `/api/webhooks/[provider]`)
 - **Database & Auth:** Supabase Auth + PostgreSQL with Row Level Security (RLS) + Private Storage Buckets
 - **State Management:** Zustand stores with client hydration, React Query polling, and Supabase synchronization
-- **Design System:** Higgsfield Dark Theme (`#09090b` / `#0a0a0c`), Electric Lime (`#ccff00`), Cyber Cyan (`#00f0ff`), subtle glass cards (`rgba(255,255,255,0.04)`), 16px borders, and micro-interactions.
+- **Design System:** Atomic Dark Theme (`#09090b` / `#0a0a0c`), Electric Lime (`#ccff00`), Cyber Cyan (`#00f0ff`), subtle glass cards (`rgba(255,255,255,0.04)`), 16px borders, and micro-interactions.
 - **Deployment:** 100% Vercel & Node.js ready.
 
 ---
@@ -176,4 +176,4 @@ npm run seed:admin
 
 ---
 
-© 2026 Atomic Apex Studio. Built with Higgsfield-grade craftsmanship.
+© 2026 Atomic Apex Studio. Built with Atomic-grade craftsmanship.

@@ -12,7 +12,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '**.higgsfield.ai',
+        hostname: 'vjs.zencdn.net',
       },
       {
         protocol: 'https',
@@ -32,7 +32,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'images.higgs.ai',
+        hostname: 'test-videos.co.uk',
       },
     ],
   },

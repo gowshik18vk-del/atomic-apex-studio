@@ -147,8 +147,8 @@ export default function NewGenVideoPage() {
           unlimited: true,
         },
         status: 'completed',
-        outputUrl: finalResultUrl || 'https://cdn.higgsfield.ai/card/16eebc9a-8310-4f68-8a02-1e2e6f109169.mp4',
-        thumbnailUrl: finalThumbUrl || 'https://static-public-media.higgsfield.ai/cards/e00fa340-fd99-47d6-ae8f-9bdd20f9393e.webp',
+        outputUrl: finalResultUrl || 'https://test-videos.co.uk/vids/jellyfish/mp4/h264/720/Jellyfish_720_10s_1MB.mp4',
+        thumbnailUrl: finalThumbUrl || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1280&auto=format&fit=crop&q=85',
         aspectRatio,
         duration,
         creditsCost: 0,
@@ -528,7 +528,7 @@ export default function NewGenVideoPage() {
                       className="group relative aspect-video cursor-pointer overflow-hidden rounded-lg border border-white/10 bg-studio-950 hover:border-apex-lime transition-all"
                     >
                       <img
-                        src={item.thumbnailUrl || 'https://static-public-media.higgsfield.ai/cards/e00fa340-fd99-47d6-ae8f-9bdd20f9393e.webp'}
+                        src={item.thumbnailUrl || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1280&auto=format&fit=crop&q=85'}
                         alt={item.prompt}
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />

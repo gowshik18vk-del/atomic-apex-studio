@@ -110,8 +110,8 @@ export const SHOWCASE_ITEMS: ShowcaseItem[] = [
     id: 'sc-1',
     title: 'Cyberpunk Monolith in Neon Rain',
     type: 'video',
-    mediaUrl: 'https://cdn.higgsfield.ai/card/16eebc9a-8310-4f68-8a02-1e2e6f109169.mp4',
-    thumbnailUrl: 'https://static-public-media.higgsfield.ai/cards/e00fa340-fd99-47d6-ae8f-9bdd20f9393e.webp',
+    mediaUrl: 'https://test-videos.co.uk/vids/jellyfish/mp4/h264/720/Jellyfish_720_10s_1MB.mp4',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1280&auto=format&fit=crop&q=85',
     model: 'Studio V1',
     aspectRatio: '16:9',
     creator: {
@@ -129,8 +129,8 @@ export const SHOWCASE_ITEMS: ShowcaseItem[] = [
     id: 'sc-2',
     title: 'Neo-Tokyo Streetwear Fashion Walk',
     type: 'video',
-    mediaUrl: 'https://static-public-media.higgsfield.ai/cards/d6b970cb-8a24-41e6-8c83-023fd2ab585b.mp4',
-    thumbnailUrl: 'https://static.higgsfield.ai/kling-4.0/explore-banner-v2/streetwear.webp',
+    mediaUrl: 'https://vjs.zencdn.net/v/oceans.mp4',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1280&auto=format&fit=crop&q=85',
     model: 'Swift V1',
     aspectRatio: '9:16',
     creator: {
@@ -148,8 +148,8 @@ export const SHOWCASE_ITEMS: ShowcaseItem[] = [
     id: 'sc-3',
     title: 'Seedance Dynamic Commercial Flow',
     type: 'video',
-    mediaUrl: 'https://static-public-media.higgsfield.ai/cards/4c2bb5a7-ba39-464d-be1d-01de1c52dcaf.mp4',
-    thumbnailUrl: 'https://static.higgsfield.ai/kling-4.0/explore-banner-v2/perfume.webp',
+    mediaUrl: 'https://vjs.zencdn.net/v/oceans.mp4',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1280&auto=format&fit=crop&q=85',
     model: 'Seedance 2.5',
     aspectRatio: '16:9',
     creator: {
@@ -167,8 +167,8 @@ export const SHOWCASE_ITEMS: ShowcaseItem[] = [
     id: 'sc-4',
     title: 'High Velocity Formula Race',
     type: 'video',
-    mediaUrl: 'https://static-public-media.higgsfield.ai/cards/8dddb16b-6fe1-4cac-a11a-a650691a292d.mp4',
-    thumbnailUrl: 'https://static.higgsfield.ai/kling-4.0/explore-banner-v2/football.webp',
+    mediaUrl: 'https://vjs.zencdn.net/v/oceans.mp4',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1280&auto=format&fit=crop&q=85',
     model: 'Range',
     aspectRatio: '21:9',
     creator: {
