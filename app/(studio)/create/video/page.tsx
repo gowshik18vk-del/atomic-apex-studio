@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
+  Video,
   Film,
   Zap,
   Wand2,
@@ -222,6 +224,26 @@ export default function CreateVideoPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in-50">
+      {/* Official Studio Direct Banner */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-400 text-black font-extrabold">
+            <Video size={18} />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-white">Looking for the Official New Gen Video Studio?</p>
+            <p className="text-[11px] text-zinc-400">100% prompt-driven AI generation with zero presets and unlimited cloud access.</p>
+          </div>
+        </div>
+        <Link
+          href="/create/new-gen-video"
+          className="flex items-center gap-1.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 px-4 py-2 text-xs font-bold text-black transition-all shadow-glow-lime"
+        >
+          <span>Open New Gen Studio</span>
+          <ArrowRight size={13} />
+        </Link>
+      </div>
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-5">
         <div>
