@@ -89,37 +89,43 @@ export function formatFirebaseAuthError(error: any): string {
 }
 
 /**
- * Synchronize or create user profile in Firestore
+ * Synchronize or create user profile in Firestore (with fast 1.5s timeout)
  */
 export async function syncFirestoreProfile(user: FirebaseUser, additionalData: { fullName?: string; role?: string } = {}) {
   if (!db) return null;
 
   try {
-    const userRef = doc(db, 'users', user.uid);
-    const snap = await getDoc(userRef);
+    const syncPromise = (async () => {
+      const userRef = doc(db, 'users', user.uid);
+      const snap = await getDoc(userRef);
 
-    if (!snap.exists()) {
-      const newProfile = {
-        uid: user.uid,
-        email: user.email || '',
-        fullName: additionalData.fullName || user.displayName || user.email?.split('@')[0] || 'Apex Creator',
-        photoURL: user.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-        provider: user.providerData?.[0]?.providerId || 'password',
-        credits: 100,
-        role: additionalData.role || (user.email === 'pcgowshik@gmail.com' ? 'admin' : 'creator'),
-        emailVerified: user.emailVerified,
-        createdAt: serverTimestamp(),
-        lastLoginAt: serverTimestamp(),
-      };
-      await setDoc(userRef, newProfile);
-      return newProfile;
-    } else {
-      await updateDoc(userRef, {
-        lastLoginAt: serverTimestamp(),
-        emailVerified: user.emailVerified,
-      });
-      return snap.data();
-    }
+      if (!snap.exists()) {
+        const newProfile = {
+          uid: user.uid,
+          email: user.email || '',
+          fullName: additionalData.fullName || user.displayName || user.email?.split('@')[0] || 'Apex Creator',
+          photoURL: user.photoURL || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+          provider: user.providerData?.[0]?.providerId || 'password',
+          credits: 100,
+          role: additionalData.role || (user.email === 'pcgowshik@gmail.com' ? 'admin' : 'creator'),
+          emailVerified: user.emailVerified,
+          createdAt: serverTimestamp(),
+          lastLoginAt: serverTimestamp(),
+        };
+        await setDoc(userRef, newProfile);
+        return newProfile;
+      } else {
+        await updateDoc(userRef, {
+          lastLoginAt: serverTimestamp(),
+          emailVerified: user.emailVerified,
+        });
+        return snap.data();
+      }
+    })();
+
+    // Never let Firestore block for more than 1.5 seconds
+    const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 1500));
+    return await Promise.race([syncPromise, timeoutPromise]);
   } catch (err) {
     console.warn('Firestore profile sync skipped or permission error:', err);
     return null;
@@ -127,15 +133,22 @@ export async function syncFirestoreProfile(user: FirebaseUser, additionalData: {
 }
 
 /**
- * Fetch profile from Firestore
+ * Fetch profile from Firestore (with fast 1.5s timeout)
  */
 export async function getFirestoreProfile(uid: string) {
   if (!db) return null;
   try {
-    const snap = await getDoc(doc(db, 'users', uid));
-    if (snap.exists()) {
-      return snap.data();
-    }
-  } catch (err) {}
-  return null;
+    const fetchPromise = (async () => {
+      const snap = await getDoc(doc(db, 'users', uid));
+      if (snap.exists()) {
+        return snap.data();
+      }
+      return null;
+    })();
+
+    const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 1500));
+    return await Promise.race([fetchPromise, timeoutPromise]);
+  } catch (err) {
+    return null;
+  }
 }

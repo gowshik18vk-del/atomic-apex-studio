@@ -209,7 +209,7 @@ export default function SettingsPage() {
 
         <div className="pt-2 flex items-center justify-between">
           <span className="text-[11px] text-zinc-500">
-            {saved ? '✓ Changes saved to local studio vault' : 'Profile updates sync with Supabase profiles table'}
+            {saved ? '✓ Changes saved to local studio vault' : 'Profile updates sync with Firebase User document'}
           </span>
           <button
             type="submit"

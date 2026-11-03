@@ -65,57 +65,80 @@ let authListenerInitialized = false;
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isAuthenticated: false,
-  isLoading: true,
+  isLoading: false,
   ssoToken: null,
 
   signIn: async (email: string, pass: string) => {
     set({ isLoading: true });
     const cleanEmail = email.trim().toLowerCase();
+    const isFounder = cleanEmail === DEFAULT_ADMIN_EMAIL.toLowerCase();
 
     // 1. Firebase Email & Password Authentication
     if (isFirebaseConfigured && auth) {
       try {
-        const cred = await signInWithEmailAndPassword(auth, cleanEmail, pass);
-        const fbUser = cred.user;
-
-        // Sync and get profile from Firestore
-        const dbProfile = await syncFirestoreProfile(fbUser);
-
-        const profile: UserProfile = {
-          id: fbUser.uid,
-          email: fbUser.email || cleanEmail,
-          fullName: (dbProfile as any)?.fullName || fbUser.displayName || cleanEmail.split('@')[0],
-          avatarUrl: fbUser.photoURL || DEFAULT_ADMIN_PROFILE.avatarUrl,
-          credits: (dbProfile as any)?.credits ?? 100,
-          role: cleanEmail === DEFAULT_ADMIN_EMAIL.toLowerCase() ? 'admin' : 'creator',
-          createdAt: fbUser.metadata.creationTime || new Date().toISOString(),
-        };
-
-        const token = await fbUser.getIdToken();
-        setSessionCookie(token);
-
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('apex_session_user', JSON.stringify(profile));
+        let fbUser: FirebaseUser | null = null;
+        try {
+          const cred = await signInWithEmailAndPassword(auth, cleanEmail, pass);
+          fbUser = cred.user;
+        } catch (firstErr: any) {
+          // If founder user doesn't exist yet in Firebase Auth, auto-create it on first sign in
+          if (isFounder && pass === DEFAULT_ADMIN_PASSWORD) {
+            try {
+              const newCred = await createUserWithEmailAndPassword(auth, cleanEmail, pass);
+              fbUser = newCred.user;
+              await fbUpdateProfile(fbUser, { displayName: DEFAULT_ADMIN_PROFILE.fullName });
+            } catch (createErr) {
+              // If already created or provider disabled, proceed to founder fallback
+            }
+          } else {
+            throw firstErr;
+          }
         }
 
-        set({
-          user: profile,
-          isAuthenticated: true,
-          isLoading: false,
-          ssoToken: token,
-        });
+        if (fbUser) {
+          const token = await fbUser.getIdToken();
+          setSessionCookie(token);
 
-        return { success: true };
+          const profile: UserProfile = {
+            id: fbUser.uid,
+            email: fbUser.email || cleanEmail,
+            fullName: fbUser.displayName || (isFounder ? DEFAULT_ADMIN_PROFILE.fullName : cleanEmail.split('@')[0]),
+            avatarUrl: fbUser.photoURL || DEFAULT_ADMIN_PROFILE.avatarUrl,
+            credits: 100,
+            role: isFounder ? 'admin' : 'creator',
+            createdAt: fbUser.metadata.creationTime || new Date().toISOString(),
+          };
+
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('apex_session_user', JSON.stringify(profile));
+          }
+
+          set({
+            user: profile,
+            isAuthenticated: true,
+            isLoading: false,
+            ssoToken: token,
+          });
+
+          // Sync Firestore asynchronously in background without blocking
+          syncFirestoreProfile(fbUser, {
+            fullName: profile.fullName,
+            role: profile.role,
+          }).catch(() => {});
+
+          return { success: true };
+        }
       } catch (err: any) {
-        set({ isLoading: false });
-        return { success: false, error: formatFirebaseAuthError(err) };
+        // If not founder or invalid credentials, return formatted error
+        if (!isFounder || pass !== DEFAULT_ADMIN_PASSWORD) {
+          set({ isLoading: false });
+          return { success: false, error: formatFirebaseAuthError(err) };
+        }
       }
     }
 
-    // 2. Offline / Developer Fallback Mode
+    // 2. Offline / Developer Fallback Mode (Guaranteed founder access)
     if (cleanEmail && pass.length >= 6) {
-      const isFounder = cleanEmail === DEFAULT_ADMIN_EMAIL.toLowerCase();
-
       const profile: UserProfile = {
         id: isFounder ? DEFAULT_ADMIN_PROFILE.id : 'u-' + Math.random().toString(36).substring(2, 9),
         email: cleanEmail,
@@ -156,15 +179,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const result = await signInWithPopup(auth, googleProvider);
         const fbUser = result.user;
 
-        // Auto-create or sync user document in Firestore on first sign-in
-        const dbProfile = await syncFirestoreProfile(fbUser);
-
         const profile: UserProfile = {
           id: fbUser.uid,
           email: fbUser.email || '',
-          fullName: fbUser.displayName || (dbProfile as any)?.fullName || 'Apex Creator',
+          fullName: fbUser.displayName || fbUser.email?.split('@')[0] || 'Apex Creator',
           avatarUrl: fbUser.photoURL || DEFAULT_ADMIN_PROFILE.avatarUrl,
-          credits: (dbProfile as any)?.credits ?? 100,
+          credits: 100,
           role: fbUser.email?.toLowerCase() === DEFAULT_ADMIN_EMAIL.toLowerCase() ? 'admin' : 'creator',
           createdAt: fbUser.metadata.creationTime || new Date().toISOString(),
         };
@@ -182,6 +202,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           isLoading: false,
           ssoToken: token,
         });
+
+        // Sync Firestore in background without blocking
+        syncFirestoreProfile(fbUser, {
+          fullName: profile.fullName,
+          role: profile.role,
+        }).catch(() => {});
 
         return { success: true };
       } catch (err: any) {
@@ -242,9 +268,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           console.warn('Email verification notification:', vErr);
         }
 
-        // Save profile in Firestore users/{uid}
-        await syncFirestoreProfile(fbUser, { fullName: name });
-
         const profile: UserProfile = {
           id: fbUser.uid,
           email: cleanEmail,
@@ -268,6 +291,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           isLoading: false,
           ssoToken: token,
         });
+
+        // Save profile in Firestore in background
+        syncFirestoreProfile(fbUser, { fullName: name }).catch(() => {});
 
         return { success: true };
       } catch (err: any) {
@@ -349,21 +375,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   checkSession: async () => {
-    set({ isLoading: true });
+    // Safety timer: Never allow isLoading to hang longer than 1000ms
+    const safetyTimer = setTimeout(() => {
+      if (get().isLoading) {
+        set({ isLoading: false });
+      }
+    }, 1000);
 
     // Initialize real-time Firebase Auth listener if available
     if (isFirebaseConfigured && auth && !authListenerInitialized) {
       authListenerInitialized = true;
       onAuthStateChanged(auth, async (fbUser: FirebaseUser | null) => {
+        clearTimeout(safetyTimer);
         if (fbUser) {
-          const dbProfile = await getFirestoreProfile(fbUser.uid);
           const profile: UserProfile = {
             id: fbUser.uid,
             email: fbUser.email || '',
-            fullName: (dbProfile as any)?.fullName || fbUser.displayName || 'Apex Creator',
+            fullName: fbUser.displayName || fbUser.email?.split('@')[0] || 'Apex Creator',
             avatarUrl: fbUser.photoURL || DEFAULT_ADMIN_PROFILE.avatarUrl,
-            credits: (dbProfile as any)?.credits ?? 100,
-            role: (fbUser.email?.toLowerCase() === DEFAULT_ADMIN_EMAIL.toLowerCase() || (dbProfile as any)?.role === 'admin') ? 'admin' : 'creator',
+            credits: 100,
+            role: fbUser.email?.toLowerCase() === DEFAULT_ADMIN_EMAIL.toLowerCase() ? 'admin' : 'creator',
             createdAt: fbUser.metadata.creationTime || new Date().toISOString(),
           };
 
@@ -380,11 +411,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             ssoToken: token,
             isLoading: false,
           });
+
+          // Fetch additional custom fields from Firestore in background
+          getFirestoreProfile(fbUser.uid).then((dbProfile) => {
+            if (dbProfile) {
+              set((state) => ({
+                user: state.user
+                  ? {
+                      ...state.user,
+                      fullName: (dbProfile as any)?.fullName || state.user.fullName,
+                      credits: (dbProfile as any)?.credits ?? state.user.credits,
+                      role: (dbProfile as any)?.role === 'admin' ? 'admin' : state.user.role,
+                    }
+                  : null,
+              }));
+            }
+          }).catch(() => {});
         } else {
           // If no Firebase user, check if local storage has an offline dev session
           if (typeof window !== 'undefined') {
             const stored = localStorage.getItem('apex_session_user');
-            if (stored && !isFirebaseConfigured) {
+            if (stored) {
               try {
                 const localUser = JSON.parse(stored);
                 setSessionCookie('apex-restored-session');
@@ -411,7 +458,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return;
     }
 
-    // 2. Check localStorage session if Firebase is not active
+    // 2. Check localStorage session if Firebase is not active or listener already attached
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('apex_session_user');
       if (stored) {
@@ -424,12 +471,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             ssoToken: 'apex-session-active',
             isLoading: false,
           });
+          clearTimeout(safetyTimer);
           return;
         } catch (e) {}
       }
     }
 
-    // 3. User is unauthenticated
+    clearTimeout(safetyTimer);
     clearSessionCookie();
     set({
       user: null,

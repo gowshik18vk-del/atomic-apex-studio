@@ -43,7 +43,7 @@ function GoogleIcon({ className = 'h-4 w-4' }: { className?: string }) {
 }
 
 export default function SignUpPage() {
-  const { signUp, signInWithGoogle, isLoading } = useAuthStore();
+  const { signUp, signInWithGoogle } = useAuthStore();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -53,6 +53,7 @@ export default function SignUpPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successNotice, setSuccessNotice] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const handleGoogleSignUp = async () => {
@@ -98,15 +99,22 @@ export default function SignUpPage() {
       return;
     }
 
-    const res = await signUp(email, password, name);
-    if (res.success) {
-      triggerConfetti();
-      setSuccessNotice(true);
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 1500);
-    } else {
-      setErrorMsg(res.error || 'Failed to create account.');
+    setIsSubmitting(true);
+    try {
+      const res = await signUp(email, password, name);
+      if (res.success) {
+        triggerConfetti();
+        setSuccessNotice(true);
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 1500);
+      } else {
+        setErrorMsg(res.error || 'Failed to create account.');
+      }
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Error creating account.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -155,8 +163,8 @@ export default function SignUpPage() {
           <button
             type="button"
             onClick={handleGoogleSignUp}
-            disabled={isLoading || isGoogleLoading || successNotice}
-            className="w-full py-3 px-4 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-white text-xs font-semibold flex items-center justify-center gap-2.5 transition-all shadow-sm group hover:border-[#C9A25E]/50"
+            disabled={isSubmitting || isGoogleLoading || successNotice}
+            className="w-full py-3 px-4 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-white text-xs font-semibold flex items-center justify-center gap-2.5 transition-all shadow-sm group hover:border-[#C9A25E]/50 disabled:opacity-50"
           >
             {isGoogleLoading ? (
               <Loader2 size={16} className="animate-spin text-[#C9A25E]" />
@@ -259,10 +267,10 @@ export default function SignUpPage() {
 
             <button
               type="submit"
-              disabled={isLoading || isGoogleLoading || successNotice}
+              disabled={isSubmitting || isGoogleLoading || successNotice}
               className="w-full py-3 rounded-xl bg-gradient-to-r from-[#C9A25E] to-amber-300 hover:from-[#B8904D] hover:to-amber-200 text-black font-bold text-xs flex items-center justify-center gap-2 mt-2 shadow-glow-gold transition-all disabled:opacity-50"
             >
-              {isLoading && !isGoogleLoading ? (
+              {isSubmitting ? (
                 <>
                   <Loader2 size={14} className="animate-spin" />
                   Creating Account...

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Sparkles,
@@ -42,13 +42,24 @@ function GoogleIcon({ className = 'h-4 w-4' }: { className?: string }) {
 }
 
 export default function LoginPage() {
-  const { signIn, signInWithGoogle, isLoading } = useAuthStore();
+  const { signIn, signInWithGoogle, isAuthenticated, checkSession } = useAuthStore();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  useEffect(() => {
+    checkSession();
+  }, [checkSession]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      window.location.href = '/dashboard';
+    }
+  }, [isAuthenticated]);
 
   const handleFillFounder = () => {
     setEmail('pcgowshik@gmail.com');
@@ -84,12 +95,19 @@ export default function LoginPage() {
       return;
     }
 
-    const res = await signIn(email, password);
-    if (res.success) {
-      triggerConfetti();
-      window.location.href = '/dashboard';
-    } else {
-      setErrorMsg(res.error || 'Authentication failed. Please verify credentials.');
+    setIsSubmitting(true);
+    try {
+      const res = await signIn(email, password);
+      if (res.success) {
+        triggerConfetti();
+        window.location.href = '/dashboard';
+      } else {
+        setErrorMsg(res.error || 'Authentication failed. Please verify credentials.');
+      }
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Authentication error.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -152,8 +170,8 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={handleGoogleSignIn}
-            disabled={isLoading || isGoogleLoading}
-            className="w-full py-3 px-4 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-white text-xs font-semibold flex items-center justify-center gap-2.5 transition-all shadow-sm group hover:border-[#C9A25E]/50"
+            disabled={isSubmitting || isGoogleLoading}
+            className="w-full py-3 px-4 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-white text-xs font-semibold flex items-center justify-center gap-2.5 transition-all shadow-sm group hover:border-[#C9A25E]/50 disabled:opacity-50"
           >
             {isGoogleLoading ? (
               <Loader2 size={16} className="animate-spin text-[#C9A25E]" />
@@ -224,13 +242,13 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={isLoading || isGoogleLoading}
+              disabled={isSubmitting || isGoogleLoading}
               className="w-full py-3 rounded-xl bg-gradient-to-r from-[#C9A25E] to-amber-300 hover:from-[#B8904D] hover:to-amber-200 text-black font-bold text-xs flex items-center justify-center gap-2 mt-2 shadow-glow-gold transition-all disabled:opacity-50"
             >
-              {isLoading && !isGoogleLoading ? (
+              {isSubmitting ? (
                 <>
                   <Loader2 size={14} className="animate-spin" />
-                  Verifying Session...
+                  Signing In...
                 </>
               ) : (
                 <>

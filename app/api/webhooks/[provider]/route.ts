@@ -1,6 +1,5 @@
 // app/api/webhooks/[provider]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase/client';
 
 export async function POST(
   req: NextRequest,
@@ -20,28 +19,6 @@ export async function POST(
 
     if (!generation_id || !status) {
       return NextResponse.json({ error: 'Missing generation_id or status' }, { status: 400 });
-    }
-
-    if (isSupabaseConfigured && supabase) {
-      if (status === 'succeeded') {
-        await supabase
-          .from('generations')
-          .update({
-            status: 'succeeded',
-            result_path: result_url,
-            finished_at: new Date().toISOString(),
-          })
-          .eq('id', generation_id);
-      } else if (status === 'failed') {
-        await supabase
-          .from('generations')
-          .update({
-            status: 'failed',
-            error: error || 'Provider render failure',
-            finished_at: new Date().toISOString(),
-          })
-          .eq('id', generation_id);
-      }
     }
 
     return NextResponse.json({ received: true, provider, generation_id });

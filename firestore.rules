@@ -1,0 +1,76 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId} (Firebase Auth UID)
+    // Fields:
+    //   - uid: string (required) - Firebase Auth UID
+    //   - email: string (required) - User email address
+    //   - fullName: string (optional) - User's display name
+    //   - photoURL: string (optional) - Profile picture URL
+    //   - provider: string (optional) - Auth provider ID (e.g., 'password', 'google.com')
+    //   - credits: number (optional) - Available generation credits
+    //   - role: string (optional) - User role ('creator', 'pro', 'admin')
+    //   - emailVerified: bool (optional) - Email verification status
+    //   - createdAt: timestamp / string (optional) - Account creation timestamp
+    //   - lastLoginAt: timestamp / string (optional) - Last sign in timestamp
+    //   NOTE: Password fields ('password', 'passwordHash') are strictly disallowed.
+    //
+    // Collection: generations
+    // Document ID: {generationId}
+    // Fields:
+    //   - id: string (required) - Generation ID
+    //   - userId: string (required) - ID of the owning user
+    //   - type: string (required) - Media type ('image' | 'video')
+    //   - model: string (required) - AI model identifier
+    //   - prompt: string (required) - Text prompt
+    //   - negativePrompt: string (optional) - Negative prompt
+    //   - parameters: map (required) - Model generation parameters
+    //   - status: string (required) - Generation status ('pending' | 'processing' | 'completed' | 'failed')
+    //   - outputUrl: string (required) - URL to generated media output
+    //   - thumbnailUrl: string (optional) - URL to thumbnail
+    //   - aspectRatio: string (required) - Aspect ratio (e.g., '16:9', '9:16')
+    //   - duration: string (optional) - Video duration
+    //   - creditsCost: number (required) - Credits spent
+    //   - isFavorite: bool (optional) - Favorited flag
+    //   - createdAt: string / timestamp (required) - Creation timestamp
+    //
+    // ===============================================================
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // /users/{userId}
+    // - Allow read, write if authenticated and user owns the document
+    // - Disallow creating/updating password fields (never store passwords in Firestore)
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId
+                         && (request.resource == null || !('password' in request.resource.data));
+    }
+
+    // /generations/{generationId}
+    // - Allow read, delete, update if authenticated and owning the document (or document not yet existing)
+    // - Allow create if authenticated and request userId matches authenticated user
+    match /generations/{generationId} {
+      allow read, delete, update: if request.auth != null && (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+
+    // Default deny: close all other paths by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

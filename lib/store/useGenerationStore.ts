@@ -1,8 +1,9 @@
 // lib/store/useGenerationStore.ts
 import { create } from 'zustand';
 import { Generation, MediaType } from '../types';
-import { supabase, isSupabaseConfigured } from '../supabase/client';
 import { useAuthStore } from './useAuthStore';
+import { db } from '../firebase/config';
+import { doc, setDoc, deleteDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 
 const INITIAL_GENERATIONS: Generation[] = [
   {
@@ -124,25 +125,15 @@ export const useGenerationStore = create<GenerationState>((set, get) => ({
       return { generations: updated };
     });
 
-    // Sync to Supabase
+    // Sync to Firestore if available
     const user = useAuthStore.getState().user;
-    if (user && isSupabaseConfigured && supabase) {
-      supabase.from('generations').insert({
-        id: item.id,
-        user_id: user.id,
-        type: item.type,
-        model: item.model,
-        prompt: item.prompt,
-        negative_prompt: item.negativePrompt,
-        parameters: item.parameters,
-        status: item.status,
-        output_url: item.outputUrl,
-        thumbnail_url: item.thumbnailUrl,
-        aspect_ratio: item.aspectRatio,
-        duration: item.duration,
-        credits_cost: item.creditsCost,
-        is_favorite: item.isFavorite,
-      }).then(() => {});
+    if (user && db) {
+      const genRef = doc(db, 'generations', item.id);
+      setDoc(genRef, {
+        ...item,
+        userId: user.id,
+        createdAt: new Date().toISOString(),
+      }).catch((err) => console.warn('Firestore gen save skipped:', err));
     }
   },
 
@@ -158,12 +149,8 @@ export const useGenerationStore = create<GenerationState>((set, get) => ({
     });
 
     const target = get().generations.find((g) => g.id === id);
-    if (target && isSupabaseConfigured && supabase) {
-      supabase
-        .from('generations')
-        .update({ is_favorite: target.isFavorite })
-        .eq('id', id)
-        .then(() => {});
+    if (target && db) {
+      updateDoc(doc(db, 'generations', id), { isFavorite: target.isFavorite }).catch(() => {});
     }
   },
 
@@ -176,8 +163,8 @@ export const useGenerationStore = create<GenerationState>((set, get) => ({
       return { generations: updated, selectedAsset: null };
     });
 
-    if (isSupabaseConfigured && supabase) {
-      supabase.from('generations').delete().eq('id', id).then(() => {});
+    if (db) {
+      deleteDoc(doc(db, 'generations', id)).catch(() => {});
     }
   },
 
@@ -195,38 +182,23 @@ export const useGenerationStore = create<GenerationState>((set, get) => ({
       }
     }
 
-    // Try fetching from Supabase
+    // Try fetching from Firestore
     const user = useAuthStore.getState().user;
-    if (user && isSupabaseConfigured && supabase) {
-      const { data } = await supabase
-        .from('generations')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (data && data.length > 0) {
-        const mapped: Generation[] = data.map((d) => ({
-          id: d.id,
-          userId: d.user_id,
-          type: d.type,
-          model: d.model,
-          prompt: d.prompt,
-          negativePrompt: d.negative_prompt,
-          parameters: d.parameters || {},
-          status: d.status,
-          outputUrl: d.output_url,
-          thumbnailUrl: d.thumbnail_url,
-          aspectRatio: d.aspect_ratio,
-          duration: d.duration,
-          creditsCost: d.credits_cost,
-          isFavorite: d.is_favorite,
-          createdAt: d.created_at,
-        }));
-        set({ generations: mapped });
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('apex_generations', JSON.stringify(mapped));
+    if (user && db) {
+      try {
+        const q = query(collection(db, 'generations'), where('userId', '==', user.id));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const list: Generation[] = [];
+          snap.forEach((d) => list.push(d.data() as Generation));
+          if (list.length > 0) {
+            set({ generations: list });
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('apex_generations', JSON.stringify(list));
+            }
+          }
         }
-      }
+      } catch (e) {}
     }
   },
 }));
