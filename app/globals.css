@@ -70,6 +70,22 @@ body {
   box-shadow: 0 0 20px -3px rgba(204, 255, 0, 0.25) !important;
 }
 
+/* Suppress any third-party badges or Lovable watermarks */
+#lovable-badge,
+a[href*="lovable.dev"],
+[class*="lovable-badge"],
+[class*="lovable_badge"],
+div[data-lovable-badge],
+div:has(> a[href*="lovable.dev"]),
+div:has(> a[href*="lovable.app"]) {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  height: 0 !important;
+  width: 0 !important;
+}
+
 /* Glowing text and buttons */
 .text-glow-lime {
   text-shadow: 0 0 20px rgba(204, 255, 0, 0.5);
