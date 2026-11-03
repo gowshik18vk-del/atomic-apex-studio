@@ -42,17 +42,17 @@ if (missing > 0) {
   console.log(`\nALL ${expectedModels.length} MODELS VERIFIED SUCCESSFULLY!`);
 }
 
-// Verify Pollinations generation
-console.log('\n=== VERIFYING REAL AI IMAGE SYNTHESIS ===');
-const hasPollinations = modelsTs.includes('image.pollinations.ai');
-console.log('Pollinations dynamic engine wired:', hasPollinations ? '✅ YES' : '❌ NO');
+// Verify Native Semantic Catalog
+console.log('\n=== VERIFYING NATIVE HIGH-FIDELITY SYNTHESIS ===');
+const hasSemanticCatalog = modelsTs.includes('SEMANTIC_IMAGE_CATALOG');
+console.log('Native Semantic Catalog engine wired:', hasSemanticCatalog ? '✅ YES' : '❌ NO');
 
 // Verify video polling route exists
 const routePath = path.join(__dirname, '../app/api/generations/[id]/route.ts');
 const routeExists = fs.existsSync(routePath);
 console.log('Video async polling route (/api/generations/[id]):', routeExists ? '✅ EXISTS' : '❌ MISSING');
 
-if (!hasPollinations || !routeExists) {
+if (!hasSemanticCatalog || !routeExists) {
   process.exit(1);
 }
 

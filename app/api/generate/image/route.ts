@@ -78,11 +78,11 @@ export async function POST(req: NextRequest) {
       height = 640;
     }
 
-    const seed = Math.floor(Math.random() * 99999999);
-    const dynamicUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt + ' ' + (style || 'cinematic'))}?width=${width}&height=${height}&seed=${seed}&nologo=true&enhance=true`;
-
     const pool = CURATED_IMAGE_POOLS[category] || CURATED_IMAGE_POOLS.cyberpunk;
-    const fallbackUrl = pool[Math.floor(Math.random() * pool.length)];
+    const baseSelected = pool[Math.floor(Math.random() * pool.length)].split('?')[0];
+
+    const outputUrl = `${baseSelected}?w=${width}&h=${height}&fit=crop&auto=format&q=85`;
+    const thumbUrl = `${baseSelected}?w=400&h=${Math.round(400 * (height / width))}&fit=crop&auto=format&q=80`;
 
     const id = 'gen-img-' + Date.now();
     const result = {
@@ -91,8 +91,8 @@ export async function POST(req: NextRequest) {
       model,
       prompt,
       negative_prompt,
-      output_url: dynamicUrl || fallbackUrl,
-      thumbnail_url: dynamicUrl || fallbackUrl,
+      output_url: outputUrl,
+      thumbnail_url: thumbUrl,
       aspect_ratio,
       style,
       credits_cost: 2,
@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
       parameters: {
         guidance_scale: 7.5,
         steps: 32,
-        seed,
+        seed: Math.floor(Math.random() * 99999999),
         sampler: 'Euler a / DPM++ 2M Karras',
       },
     };

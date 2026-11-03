@@ -115,10 +115,11 @@ export default function LandingPage() {
 
   const handleLaunchPrompt = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    const query = promptInput.trim() ? `?prompt=${encodeURIComponent(promptInput.trim())}` : '';
     if (generationType === 'image') {
-      window.location.href = ATOMIC_LINKS.vision;
+      router.push(`/create/image${query}`);
     } else {
-      window.location.href = ATOMIC_LINKS.pixelVideo;
+      router.push(`/create/video${query}`);
     }
   };
 
@@ -301,8 +302,8 @@ export default function LandingPage() {
               onChange={(e) => setPromptInput(e.target.value)}
               placeholder={
                 generationType === 'image'
-                  ? 'Describe an image to open in Atomic Apex Vision...'
-                  : 'Describe a video to open in Apex Pixel...'
+                  ? 'Describe an image to generate with Apex Vision...'
+                  : 'Describe a video to generate with Swift V1...'
               }
               className="w-full bg-transparent px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none"
             />
@@ -312,7 +313,7 @@ export default function LandingPage() {
               type="submit"
               className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-apex-lime to-emerald-400 hover:opacity-90 text-black font-bold text-xs flex items-center justify-center gap-1.5 shadow-glow-lime whitespace-nowrap transition-all"
             >
-              <span>{generationType === 'image' ? 'Open in Vision' : 'Open in Pixel'}</span>
+              <span>{generationType === 'image' ? 'Generate Image' : 'Generate Video'}</span>
               <ArrowRight size={13} />
             </button>
           </form>

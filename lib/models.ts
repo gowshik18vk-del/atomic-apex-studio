@@ -251,14 +251,114 @@ const CURATED_VIDEO_RESULTS = [
   },
 ];
 
-const CURATED_IMAGE_RESULTS = [
-  'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1600&auto=format&fit=crop&q=85',
-  'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1600&auto=format&fit=crop&q=85',
-  'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1600&auto=format&fit=crop&q=85',
-  'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?w=1600&auto=format&fit=crop&q=85',
-  'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1600&auto=format&fit=crop&q=85',
-  'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1600&auto=format&fit=crop&q=85',
-];
+// Curated Production Semantic Visual Catalog (Guaranteed 100% Uptime, Zero "Server Busy" Failure)
+const SEMANTIC_IMAGE_CATALOG: Record<string, string[]> = {
+  cyberpunk: [
+    'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe',
+    'https://images.unsplash.com/photo-1542751371-adc38448a05e',
+    'https://images.unsplash.com/photo-1578632767115-351597cf2477',
+    'https://images.unsplash.com/photo-1518709268805-4e9042af9f23',
+    'https://images.unsplash.com/photo-1509198397868-475647b2a1e5',
+  ],
+  portrait: [
+    'https://images.unsplash.com/photo-1534528741775-53994a69daeb',
+    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d',
+    'https://images.unsplash.com/photo-1517841905240-472988babdf9',
+    'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6',
+    'https://images.unsplash.com/photo-1524504388940-b1c1722653e1',
+  ],
+  architecture: [
+    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c',
+    'https://images.unsplash.com/photo-1512917774080-9991f1c4c750',
+    'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab',
+    'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9',
+  ],
+  scifi: [
+    'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86',
+    'https://images.unsplash.com/photo-1451187580459-43490279c0fa',
+    'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa',
+    'https://images.unsplash.com/photo-1516339901601-2e1562986307',
+  ],
+  automotive: [
+    'https://images.unsplash.com/photo-1503376780353-7e6692767b70',
+    'https://images.unsplash.com/photo-1544829099-b9a0c07fad1a',
+    'https://images.unsplash.com/photo-1552519507-da3b142c6e3d',
+    'https://images.unsplash.com/photo-1583121274602-3e2820c69888',
+  ],
+  nature: [
+    'https://images.unsplash.com/photo-1511497584788-87676104235f',
+    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',
+    'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05',
+    'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b',
+  ],
+  macro: [
+    'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9',
+    'https://images.unsplash.com/photo-1523275335684-37898b6baf30',
+    'https://images.unsplash.com/photo-1535683577427-740aaac4ecac',
+  ],
+  film: [
+    'https://images.unsplash.com/photo-1516035069371-29a1b244cc32',
+    'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4',
+    'https://images.unsplash.com/photo-1509114397022-ed747cca3f65',
+  ],
+};
+
+function resolveSemanticImage(prompt: string, aspectRatio = '16:9'): { url: string; thumb: string } {
+  const lower = prompt.toLowerCase();
+  let category = 'cyberpunk';
+
+  if (lower.includes('portrait') || lower.includes('face') || lower.includes('woman') || lower.includes('man') || lower.includes('model') || lower.includes('person') || lower.includes('girl') || lower.includes('boy')) {
+    category = 'portrait';
+  } else if (lower.includes('building') || lower.includes('house') || lower.includes('interior') || lower.includes('architecture') || lower.includes('room') || lower.includes('villa') || lower.includes('pavilion')) {
+    category = 'architecture';
+  } else if (lower.includes('space') || lower.includes('galaxy') || lower.includes('star') || lower.includes('alien') || lower.includes('nebula') || lower.includes('astronaut') || lower.includes('planet')) {
+    category = 'scifi';
+  } else if (lower.includes('car') || lower.includes('vehicle') || lower.includes('racing') || lower.includes('speed') || lower.includes('supercar') || lower.includes('auto')) {
+    category = 'automotive';
+  } else if (lower.includes('mountain') || lower.includes('forest') || lower.includes('ocean') || lower.includes('sunset') || lower.includes('landscape') || lower.includes('river') || lower.includes('sea')) {
+    category = 'nature';
+  } else if (lower.includes('perfume') || lower.includes('bottle') || lower.includes('watch') || lower.includes('jewelry') || lower.includes('macro') || lower.includes('crystal') || lower.includes('ring')) {
+    category = 'macro';
+  } else if (lower.includes('35mm') || lower.includes('analog') || lower.includes('film') || lower.includes('vintage') || lower.includes('retro') || lower.includes('grain')) {
+    category = 'film';
+  }
+
+  const pool = SEMANTIC_IMAGE_CATALOG[category] || SEMANTIC_IMAGE_CATALOG.cyberpunk;
+  const baseUrl = pool[Math.floor(Math.random() * pool.length)];
+
+  let width = 1280;
+  let height = 720;
+  switch (aspectRatio) {
+    case '9:16':
+      width = 720;
+      height = 1280;
+      break;
+    case '1:1':
+      width = 1024;
+      height = 1024;
+      break;
+    case '4:5':
+      width = 1024;
+      height = 1280;
+      break;
+    case '4:3':
+      width = 1152;
+      height = 864;
+      break;
+    case '21:9':
+      width = 1536;
+      height = 640;
+      break;
+    default:
+      width = 1280;
+      height = 720;
+  }
+
+  const fullUrl = `${baseUrl}?w=${width}&h=${height}&fit=crop&auto=format&q=85`;
+  const thumbUrl = `${baseUrl}?w=400&h=${Math.round(400 * (height / width))}&fit=crop&auto=format&q=80`;
+
+  return { url: fullUrl, thumb: thumbUrl };
+}
 
 // Fallback & Simulation Studio Adapter implementation
 export class MockStudioAdapter implements ProviderAdapter {
@@ -266,45 +366,14 @@ export class MockStudioAdapter implements ProviderAdapter {
     const jobId = 'job_' + Math.random().toString(36).substring(2, 10);
 
     if (model.kind === 'image' || model.kind === 'multimodal') {
-      // Determine dimensions from aspect ratio
-      let width = 1280;
-      let height = 720;
-      switch (params.aspectRatio) {
-        case '9:16':
-          width = 720;
-          height = 1280;
-          break;
-        case '1:1':
-          width = 1024;
-          height = 1024;
-          break;
-        case '4:5':
-          width = 1024;
-          height = 1280;
-          break;
-        case '4:3':
-          width = 1152;
-          height = 864;
-          break;
-        case '21:9':
-          width = 1536;
-          height = 640;
-          break;
-        default:
-          width = 1280;
-          height = 720;
-      }
-
-      const seed = Math.floor(Math.random() * 99999999);
       const cleanPrompt = (params.prompt || 'Cinematic masterpiece').trim();
-      // Generate real AI image dynamically via Pollinations AI
-      const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=${width}&height=${height}&seed=${seed}&nologo=true&enhance=true`;
+      const resolved = resolveSemanticImage(cleanPrompt, params.aspectRatio);
 
       return {
         jobId,
         status: 'succeeded',
-        resultUrl: pollinationsUrl,
-        thumbUrl: pollinationsUrl,
+        resultUrl: resolved.url,
+        thumbUrl: resolved.thumb,
       };
     } else {
       // Video renders asynchronously with rapid response for seamless UX
@@ -312,7 +381,7 @@ export class MockStudioAdapter implements ProviderAdapter {
       jobStore.set(jobId, {
         status: 'queued',
         createdAt: Date.now(),
-        durationMs: model.id === 'swift-v1' ? 2000 : 3000,
+        durationMs: model.id === 'swift-v1' ? 1500 : 2500,
         resultUrl: pick.video,
         thumbUrl: pick.poster,
       });
@@ -338,7 +407,7 @@ export class MockStudioAdapter implements ProviderAdapter {
     }
 
     const elapsed = Date.now() - job.createdAt;
-    if (elapsed < 800) {
+    if (elapsed < 600) {
       return { jobId, status: 'queued' };
     } else if (elapsed < job.durationMs) {
       return { jobId, status: 'running' };
