@@ -23,6 +23,8 @@ import { useGenerationStore } from '@/lib/store/useGenerationStore';
 import { SHOWCASE_ITEMS } from '@/lib/constants/showcase';
 import { formatDate } from '@/lib/utils';
 
+import { ATOMIC_LINKS } from '@/lib/constants/links';
+
 export default function DashboardPage() {
   const router = useRouter();
   const { user } = useAuthStore();
@@ -31,20 +33,22 @@ export default function DashboardPage() {
 
   const toolCards = [
     {
-      title: 'Apex Vision',
+      title: 'Atomic Apex Vision',
       subtitle: 'Image Generation',
       desc: 'Photorealistic imagery with native aspect ratio controls & style presets.',
-      href: '/create/image',
+      href: ATOMIC_LINKS.vision,
+      isExternal: true,
       icon: Sparkles,
       badge: 'FLAGSHIP',
       accent: 'from-apex-lime to-emerald-400',
       credits: '2 cr',
     },
     {
-      title: 'Studio V1 & Swift',
+      title: 'Apex Pixel Video',
       subtitle: 'Video Generation',
-      desc: 'High temporal stability, 30fps motion paths & Hollywood camera trajectories.',
-      href: '/create/video',
+      desc: 'Swift, Studio & Range cinematic models with custom camera orbits.',
+      href: ATOMIC_LINKS.pixelVideo,
+      isExternal: true,
       icon: Film,
       badge: 'CINEMA 4K',
       accent: 'from-apex-cyan to-blue-500',
@@ -53,18 +57,20 @@ export default function DashboardPage() {
     {
       title: 'Creator Studio',
       subtitle: 'Multi-Model Suite',
-      desc: 'Side-by-side comparison between Gemini 2.5 Flash, Apex Vision & Kling.',
-      href: '/studio',
+      desc: 'Prompt-first creative studio. Every frame starts as a sentence.',
+      href: ATOMIC_LINKS.creatorStudio,
+      isExternal: true,
       icon: Layers,
       badge: 'ORCHESTRATOR',
       accent: 'from-purple-500 to-indigo-500',
       credits: '4 cr',
     },
     {
-      title: 'Atomic AI & Runner',
+      title: 'Atomic Workspace Runner',
       subtitle: 'API Testing & Chat',
-      desc: 'Interactive creative co-pilot and automated HTTP endpoint testbench.',
-      href: '/chat',
+      desc: 'Project-aware AI workspace for real provider models and API testbench.',
+      href: ATOMIC_LINKS.workspace,
+      isExternal: true,
       icon: MessageSquareCode,
       badge: 'DEVELOPER',
       accent: 'from-amber-400 to-orange-500',
@@ -125,9 +131,11 @@ export default function DashboardPage() {
           {toolCards.map((card) => {
             const Icon = card.icon;
             return (
-              <Link
+              <a
                 key={card.title}
                 href={card.href}
+                target={card.isExternal ? '_blank' : undefined}
+                rel={card.isExternal ? 'noopener noreferrer' : undefined}
                 className="group relative flex flex-col justify-between p-5 rounded-3xl border border-white/10 bg-studio-900/70 hover:border-apex-lime/40 transition-all duration-300 shadow-glass-card hover:-translate-y-1"
               >
                 <div>
@@ -159,7 +167,7 @@ export default function DashboardPage() {
                     Launch <ArrowRight size={13} />
                   </span>
                 </div>
-              </Link>
+              </a>
             );
           })}
         </div>
@@ -209,7 +217,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Trending Community Creations (Higgsfield Style) */}
+      {/* Trending Community Creations */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <div>

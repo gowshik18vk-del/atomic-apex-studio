@@ -24,6 +24,14 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: '**.lovable.app',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.manus.space',
+      },
+      {
+        protocol: 'https',
         hostname: 'images.higgs.ai',
       },
     ],

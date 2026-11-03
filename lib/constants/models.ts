@@ -14,9 +14,9 @@ export const IMAGE_MODELS: ModelOption[] = [
     recommended: true,
   },
   {
-    id: 'seedance-2-5',
-    name: 'Seedance 2.5',
-    provider: 'Higgsfield Engine',
+    id: 'apex-ultra-v2',
+    name: 'Apex Ultra V2',
+    provider: 'Atomic Vision Engine',
     badge: 'NEW',
     description: 'Next-gen composition model optimized for commercial ads, character consistency and vibrant neon colors.',
     type: 'image',

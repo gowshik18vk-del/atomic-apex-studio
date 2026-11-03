@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
                   role: 'user',
                   parts: [
                     {
-                      text: `You are Atomic AI, an expert cinematic director and AI prompt engineer inside Atomic Apex Studio (Higgsfield-style AI creative suite). Help the user craft exceptional prompts, camera angles, color grading, and technical settings for Apex Vision (images) and Swift/Studio V1 (videos). Respond concisely with clear markdown formatting. User says: "${lastUserMessage}"`,
+                      text: `You are Atomic AI, an expert cinematic director and AI prompt engineer inside Atomic Apex Studio. Help the user craft exceptional prompts, camera angles, color grading, and technical settings for Apex Vision (images) and Swift/Studio V1 (videos). Respond concisely with clear markdown formatting. User says: "${lastUserMessage}"`,
                     },
                   ],
                 },

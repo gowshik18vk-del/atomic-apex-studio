@@ -94,7 +94,7 @@ export default function Sidebar({
                   </span>
                 </span>
                 <span className="text-[10px] text-zinc-500 font-mono">
-                  Higgsfield Native Edition
+                  Cinematic Creation Suite
                 </span>
               </div>
             )}

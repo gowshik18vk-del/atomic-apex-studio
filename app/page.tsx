@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { SHOWCASE_ITEMS } from '@/lib/constants/showcase';
 import { useAuthStore } from '@/lib/store/useAuthStore';
+import { ATOMIC_LINKS } from '@/lib/constants/links';
 
 // Atomic Apex Studio Signature Gilt Brand Mark (from creator studio)
 function ApexBrandMark({ className = 'size-8' }: { className?: string }) {
@@ -64,17 +65,17 @@ export default function LandingPage() {
   const heroVideos = [
     {
       title: 'Commercial Fluid Dynamics',
-      engine: 'Seedance 2.5',
+      engine: 'Apex Studio V1',
       url: 'https://static-public-media.higgsfield.ai/cards/4c2bb5a7-ba39-464d-be1d-01de1c52dcaf.mp4',
     },
     {
       title: 'Cyberpunk Monolith Rain',
-      engine: 'Studio V1',
+      engine: 'Apex Pixel Swift',
       url: 'https://cdn.higgsfield.ai/card/16eebc9a-8310-4f68-8a02-1e2e6f109169.mp4',
     },
     {
       title: 'High Velocity Canyon Rush',
-      engine: 'Range V2',
+      engine: 'Apex Range V2',
       url: 'https://static-public-media.higgsfield.ai/cards/8dddb16b-6fe1-4cac-a11a-a650691a292d.mp4',
     },
   ];
@@ -114,11 +115,10 @@ export default function LandingPage() {
 
   const handleLaunchPrompt = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const query = encodeURIComponent(promptInput.trim());
     if (generationType === 'image') {
-      router.push(`/create/image${query ? `?prompt=${query}` : ''}`);
+      window.location.href = ATOMIC_LINKS.vision;
     } else {
-      router.push(`/create/video${query ? `?prompt=${query}` : ''}`);
+      window.location.href = ATOMIC_LINKS.pixelVideo;
     }
   };
 
@@ -149,7 +149,7 @@ export default function LandingPage() {
           </div>
         </Link>
 
-        {/* Center Higgsfield Navigation Pills */}
+        {/* Center Navigation Pills - Directing to user's products */}
         <nav className="hidden lg:flex items-center gap-1 p-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-md text-xs font-semibold text-zinc-300">
           <Link
             href="/dashboard"
@@ -157,30 +157,43 @@ export default function LandingPage() {
           >
             Explore
           </Link>
-          <Link
-            href="/create/image"
-            className="px-3.5 py-1.5 rounded-full hover:text-white hover:bg-white/10 transition-all"
-          >
-            Apex Vision (Image)
-          </Link>
-          <Link
-            href="/create/video"
-            className="px-3.5 py-1.5 rounded-full hover:text-white hover:bg-white/10 transition-all"
-          >
-            Apex Pixel (Video)
-          </Link>
-          <Link
-            href="/studio"
-            className="px-3.5 py-1.5 rounded-full hover:text-white hover:bg-white/10 transition-all"
-          >
-            Creator Studio
-          </Link>
-          <Link
-            href="/chat"
+          <a
+            href={ATOMIC_LINKS.vision}
+            target="_blank"
+            rel="noopener noreferrer"
             className="px-3.5 py-1.5 rounded-full hover:text-white hover:bg-white/10 transition-all flex items-center gap-1"
           >
-            <Code2 size={13} className="text-apex-cyan" /> Workspace API
-          </Link>
+            <span>Atomic Apex Vision</span>
+            <ExternalLink size={11} className="text-zinc-500" />
+          </a>
+          <a
+            href={ATOMIC_LINKS.pixelVideo}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3.5 py-1.5 rounded-full hover:text-white hover:bg-white/10 transition-all flex items-center gap-1"
+          >
+            <span>Apex Pixel (Video)</span>
+            <ExternalLink size={11} className="text-zinc-500" />
+          </a>
+          <a
+            href={ATOMIC_LINKS.creatorStudio}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3.5 py-1.5 rounded-full hover:text-white hover:bg-white/10 transition-all flex items-center gap-1"
+          >
+            <span>Creator Studio</span>
+            <ExternalLink size={11} className="text-zinc-500" />
+          </a>
+          <a
+            href={ATOMIC_LINKS.workspace}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3.5 py-1.5 rounded-full hover:text-white hover:bg-white/10 transition-all flex items-center gap-1"
+          >
+            <Code2 size={13} className="text-apex-cyan" />
+            <span>Workspace API</span>
+            <ExternalLink size={11} className="text-zinc-500" />
+          </a>
         </nav>
 
         {/* Right Auth / Action */}
@@ -205,12 +218,14 @@ export default function LandingPage() {
             </Link>
           )}
 
-          <Link
-            href="/dashboard"
+          <a
+            href={ATOMIC_LINKS.creatorStudio}
+            target="_blank"
+            rel="noopener noreferrer"
             className="glow-btn px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-glow-lime"
           >
             Start Creating <ArrowRight size={13} />
-          </Link>
+          </a>
         </div>
       </header>
 
@@ -281,8 +296,8 @@ export default function LandingPage() {
               onChange={(e) => setPromptInput(e.target.value)}
               placeholder={
                 generationType === 'image'
-                  ? 'Describe an image (e.g. Dawn ascent on misty brutalist staircase...)'
-                  : 'Describe a cinematic video (e.g. Neon Tokyo drone tracking shot...)'
+                  ? 'Describe an image to open in Atomic Apex Vision...'
+                  : 'Describe a video to open in Apex Pixel...'
               }
               className="w-full bg-transparent px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none"
             />
@@ -292,7 +307,7 @@ export default function LandingPage() {
               type="submit"
               className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-apex-lime to-emerald-400 hover:opacity-90 text-black font-bold text-xs flex items-center justify-center gap-1.5 shadow-glow-lime whitespace-nowrap transition-all"
             >
-              <span>Generate</span>
+              <span>{generationType === 'image' ? 'Open in Vision' : 'Open in Pixel'}</span>
               <ArrowRight size={13} />
             </button>
           </form>
@@ -313,7 +328,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* 3. Hero Video Display Showcase (Higgsfield Video Player) */}
+        {/* 3. Hero Video Display Showcase */}
         <div className="relative mt-12 rounded-3xl border border-white/10 bg-studio-900/60 p-2 sm:p-3 shadow-2xl backdrop-blur-2xl">
           <div className="relative aspect-[16/9] md:aspect-[21/9] w-full rounded-2xl overflow-hidden bg-black flex items-center justify-center">
             <video
@@ -363,12 +378,14 @@ export default function LandingPage() {
                     {hv.engine}
                   </button>
                 ))}
-                <Link
-                  href="/create/video"
+                <a
+                  href={ATOMIC_LINKS.pixelVideo}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="glow-btn px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 ml-2"
                 >
-                  <Film size={14} /> Open in Studio
-                </Link>
+                  <Film size={14} /> Open in Pixel <ExternalLink size={12} />
+                </a>
               </div>
             </div>
           </div>
@@ -386,12 +403,14 @@ export default function LandingPage() {
               Curated Exemplars from the Core Engine
             </h2>
           </div>
-          <Link
-            href="/create/image"
+          <a
+            href={ATOMIC_LINKS.creatorStudio}
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-xs font-semibold text-zinc-400 hover:text-white flex items-center gap-1"
           >
-            Launch Prompt Studio <ArrowRight size={12} />
-          </Link>
+            Launch Prompt Studio <ExternalLink size={12} />
+          </a>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -427,12 +446,14 @@ export default function LandingPage() {
                   >
                     <Copy size={11} /> {copiedPromptId === sample.id ? 'Copied!' : 'Copy prompt'}
                   </button>
-                  <Link
-                    href={`/create/image?prompt=${encodeURIComponent(sample.prompt)}`}
+                  <a
+                    href={sample.type === 'video' ? ATOMIC_LINKS.pixelVideo : ATOMIC_LINKS.vision}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="text-[10px] font-semibold text-zinc-300 hover:text-white flex items-center gap-0.5"
                   >
-                    Remix <ChevronRight size={11} />
-                  </Link>
+                    Open <ExternalLink size={11} />
+                  </a>
                 </div>
               </figcaption>
             </figure>
@@ -440,19 +461,19 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 5. Four Integrated Tool Suites (Apex Vision, Apex Pixel, Creator Studio, API Runner) */}
+      {/* 5. Four Integrated Tool Suites (Directing to user's exact links) */}
       <section className="py-20 px-6 sm:px-12 max-w-7xl mx-auto border-t border-white/5 space-y-10">
         <div className="text-center space-y-3 max-w-2xl mx-auto">
           <h2 className="font-display text-3xl font-extrabold tracking-tight text-white">
-            Everything Inside One Creative Core
+            Everything Inside Your Creative Suite
           </h2>
           <p className="text-xs sm:text-sm text-zinc-400">
-            Unified authentication, shared credit wallet, and embedded models. No external redirects.
+            Launch directly into each dedicated studio engine.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Card 1: Apex Vision */}
+          {/* Card 1: Atomic Apex Vision */}
           <div className="p-6 rounded-3xl border border-white/10 bg-studio-900/70 hover:border-[#C9A25E]/50 transition-all duration-300 shadow-glass-card flex flex-col justify-between group">
             <div>
               <div className="flex items-center justify-between mb-4">
@@ -465,7 +486,7 @@ export default function LandingPage() {
               </div>
 
               <h3 className="font-display text-base font-bold text-white group-hover:text-[#F6E05E] transition-colors">
-                Apex Vision (Image)
+                Atomic Apex Vision
               </h3>
               <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
                 Turn text prompts into studio-grade images with Apex V1 and Apex Vision V2. 20 free credits every day, 8K render fidelity, and multiple aspect ratios.
@@ -473,12 +494,15 @@ export default function LandingPage() {
             </div>
 
             <div className="pt-6 border-t border-white/5 mt-6">
-              <Link
-                href="/create/image"
-                className="text-xs font-semibold text-[#F6E05E] hover:underline flex items-center gap-1"
+              <a
+                href={ATOMIC_LINKS.vision}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-semibold text-[#F6E05E] hover:underline flex items-center gap-1.5"
               >
-                Launch Apex Vision <ChevronRight size={14} />
-              </Link>
+                <span>Launch Atomic Apex Vision</span>
+                <ExternalLink size={13} />
+              </a>
             </div>
           </div>
 
@@ -503,12 +527,15 @@ export default function LandingPage() {
             </div>
 
             <div className="pt-6 border-t border-white/5 mt-6">
-              <Link
-                href="/create/video"
-                className="text-xs font-semibold text-apex-lime hover:underline flex items-center gap-1"
+              <a
+                href={ATOMIC_LINKS.pixelVideo}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-semibold text-apex-lime hover:underline flex items-center gap-1.5"
               >
-                Launch Apex Pixel <ChevronRight size={14} />
-              </Link>
+                <span>Launch Apex Pixel</span>
+                <ExternalLink size={13} />
+              </a>
             </div>
           </div>
 
@@ -525,20 +552,23 @@ export default function LandingPage() {
               </div>
 
               <h3 className="font-display text-base font-bold text-white group-hover:text-purple-400 transition-colors">
-                Creator Studio
+                Atomic Apex Creator Studio
               </h3>
               <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
-                Multi-shot orchestration, storyboard sequencing, and direct comparison across Seedance 2.5, Flux Pro, and Kling 4.0 Cinema.
+                A prompt-first creative studio. Every frame starts as a sentence. Generate images and videos with real AI models.
               </p>
             </div>
 
             <div className="pt-6 border-t border-white/5 mt-6">
-              <Link
-                href="/studio"
-                className="text-xs font-semibold text-purple-400 hover:underline flex items-center gap-1"
+              <a
+                href={ATOMIC_LINKS.creatorStudio}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-semibold text-purple-400 hover:underline flex items-center gap-1.5"
               >
-                Launch Creator Studio <ChevronRight size={14} />
-              </Link>
+                <span>Launch Creator Studio</span>
+                <ExternalLink size={13} />
+              </a>
             </div>
           </div>
 
@@ -563,12 +593,15 @@ export default function LandingPage() {
             </div>
 
             <div className="pt-6 border-t border-white/5 mt-6">
-              <Link
-                href="/chat"
-                className="text-xs font-semibold text-apex-cyan hover:underline flex items-center gap-1"
+              <a
+                href={ATOMIC_LINKS.workspace}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-semibold text-apex-cyan hover:underline flex items-center gap-1.5"
               >
-                Launch Workspace Runner <ChevronRight size={14} />
-              </Link>
+                <span>Launch Workspace Runner</span>
+                <ExternalLink size={13} />
+              </a>
             </div>
           </div>
         </div>
@@ -579,19 +612,21 @@ export default function LandingPage() {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
             <span className="text-xs font-bold text-apex-lime font-mono uppercase tracking-wider">
-              Higgsfield Aesthetic Reel
+              Atomic Apex Live Reel
             </span>
             <h2 className="font-display text-3xl font-extrabold tracking-tight text-white mt-1">
               Community Reel & Prompt Feed
             </h2>
           </div>
 
-          <Link
-            href="/dashboard"
+          <a
+            href={ATOMIC_LINKS.creatorStudio}
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-xs font-semibold text-zinc-400 hover:text-white flex items-center gap-1"
           >
-            Explore Full Library <ArrowRight size={12} />
-          </Link>
+            Explore Full Library <ExternalLink size={12} />
+          </a>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -644,7 +679,14 @@ export default function LandingPage() {
                 </p>
                 <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[10px] text-zinc-500">
                   <span>{item.creator.name}</span>
-                  <span className="font-mono text-apex-lime">{item.aspectRatio}</span>
+                  <a
+                    href={item.type === 'video' ? ATOMIC_LINKS.pixelVideo : ATOMIC_LINKS.vision}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-apex-lime hover:underline flex items-center gap-1"
+                  >
+                    Direct <ExternalLink size={10} />
+                  </a>
                 </div>
               </div>
             </div>
@@ -662,16 +704,18 @@ export default function LandingPage() {
           </h2>
 
           <p className="text-xs sm:text-sm text-zinc-400 max-w-xl mx-auto leading-relaxed">
-            Sign in with Google OAuth or email to claim your 100 complimentary creation credits and experience the full power of Atomic Apex Studio.
+            Sign in with Google OAuth or email to claim your 100 complimentary creation credits and direct your vision with Atomic Apex Studio.
           </p>
 
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/dashboard"
+            <a
+              href={ATOMIC_LINKS.creatorStudio}
+              target="_blank"
+              rel="noopener noreferrer"
               className="glow-btn px-8 py-4 rounded-2xl text-sm font-black flex items-center justify-center gap-2 shadow-glow-lime w-full sm:w-auto"
             >
-              <Zap size={16} className="fill-current" /> Launch Studio Dashboard
-            </Link>
+              <Zap size={16} className="fill-current" /> Launch Atomic Apex Studio
+            </a>
 
             <Link
               href="/login"
@@ -692,18 +736,38 @@ export default function LandingPage() {
         </div>
 
         <div className="flex items-center gap-6">
-          <Link href="/create/image" className="hover:text-white transition-colors">
-            Apex Vision (Image)
-          </Link>
-          <Link href="/create/video" className="hover:text-white transition-colors">
+          <a
+            href={ATOMIC_LINKS.vision}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-white transition-colors"
+          >
+            Atomic Apex Vision
+          </a>
+          <a
+            href={ATOMIC_LINKS.pixelVideo}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-white transition-colors"
+          >
             Apex Pixel (Video)
-          </Link>
-          <Link href="/studio" className="hover:text-white transition-colors">
+          </a>
+          <a
+            href={ATOMIC_LINKS.creatorStudio}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-white transition-colors"
+          >
             Creator Studio
-          </Link>
-          <Link href="/chat" className="hover:text-white transition-colors">
-            API Runner
-          </Link>
+          </a>
+          <a
+            href={ATOMIC_LINKS.workspace}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-white transition-colors"
+          >
+            Workspace API
+          </a>
         </div>
       </footer>
     </div>

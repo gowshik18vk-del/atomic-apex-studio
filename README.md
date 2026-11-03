@@ -1,7 +1,7 @@
 # Atomic Apex Studio ⚡🎬
 
 > **The AI-Native Creative Suite for Photorealistic Imagery, Cinema Video & Multi-Model Orchestration.**  
-> Crafted with the premium dark, cinematic, creator-focused aesthetic of [Higgsfield.ai](https://higgsfield.ai/).
+> Crafted with a premium dark, cinematic, creator-focused aesthetic and deep integration into Atomic Apex Vision, Apex Pixel, Creator Studio, and Atomic Workspace.
 
 ---
 
