@@ -20,6 +20,9 @@ import {
   Copy,
   Volume2,
   VolumeX,
+  Video,
+  Cloud,
+  Infinity as InfinityIcon,
 } from 'lucide-react';
 import { SHOWCASE_ITEMS } from '@/lib/constants/showcase';
 import { useAuthStore } from '@/lib/store/useAuthStore';
@@ -59,7 +62,7 @@ export default function LandingPage() {
   );
   const [isMuted, setIsMuted] = useState(true);
   const [promptInput, setPromptInput] = useState('');
-  const [generationType, setGenerationType] = useState<'image' | 'video'>('image');
+  const [generationType, setGenerationType] = useState<'image' | 'video' | 'newgen'>('newgen');
   const [copiedPromptId, setCopiedPromptId] = useState<string | null>(null);
 
   const heroVideos = [
@@ -118,6 +121,8 @@ export default function LandingPage() {
     const query = promptInput.trim() ? `?prompt=${encodeURIComponent(promptInput.trim())}` : '';
     if (generationType === 'image') {
       router.push(`/create/image${query}`);
+    } else if (generationType === 'newgen') {
+      router.push(`/create/new-gen-video${query}`);
     } else {
       router.push(`/create/video${query}`);
     }
@@ -152,6 +157,16 @@ export default function LandingPage() {
 
         {/* Center Navigation Pills - Directing to user's products */}
         <nav className="hidden lg:flex items-center gap-1 p-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-md text-xs font-semibold text-zinc-300">
+          <Link
+            href="/create/new-gen-video"
+            className="px-3.5 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-all flex items-center gap-1.5 border border-emerald-500/30 font-bold shadow-sm"
+          >
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>New Gen Video</span>
+            <span className="rounded bg-emerald-400/20 px-1.5 py-0.2 text-[8px] uppercase tracking-wider font-extrabold text-emerald-300">
+              Unlimited
+            </span>
+          </Link>
           <a
             href={ATOMIC_LINKS.creatorStudio}
             target="_blank"
@@ -161,6 +176,7 @@ export default function LandingPage() {
             <span>Explore Studio</span>
             <ExternalLink size={11} className="text-zinc-500" />
           </a>
+          <Link href="/create/new-gen-video" className="text-emerald-400 hover:underline font-bold transition-colors">New Gen Video (Unlimited)</Link>
           <a
             href={ATOMIC_LINKS.vision}
             target="_blank"
@@ -273,6 +289,17 @@ export default function LandingPage() {
             <div className="flex items-center bg-black/40 rounded-xl p-1 border border-white/5 w-full sm:w-auto">
               <button
                 type="button"
+                onClick={() => setGenerationType('newgen')}
+                className={`flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                  generationType === 'newgen'
+                    ? 'bg-emerald-400 text-black shadow-sm font-extrabold'
+                    : 'text-emerald-400 hover:text-white'
+                }`}
+              >
+                <Video size={13} /> New Gen Video
+              </button>
+              <button
+                type="button"
                 onClick={() => setGenerationType('image')}
                 className={`flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                   generationType === 'image'
@@ -301,7 +328,9 @@ export default function LandingPage() {
               value={promptInput}
               onChange={(e) => setPromptInput(e.target.value)}
               placeholder={
-                generationType === 'image'
+                generationType === 'newgen'
+                  ? 'Describe a cinematic video to generate with Wan 2.1 or LTX (Unlimited Cloud)...'
+                  : generationType === 'image'
                   ? 'Describe an image to generate with Apex Vision...'
                   : 'Describe a video to generate with Swift V1...'
               }
@@ -313,7 +342,7 @@ export default function LandingPage() {
               type="submit"
               className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-apex-lime to-emerald-400 hover:opacity-90 text-black font-bold text-xs flex items-center justify-center gap-1.5 shadow-glow-lime whitespace-nowrap transition-all"
             >
-              <span>{generationType === 'image' ? 'Generate Image' : 'Generate Video'}</span>
+              <span>{generationType === 'newgen' ? 'Generate New Gen Video' : generationType === 'image' ? 'Generate Image' : 'Generate Video'}</span>
               <ArrowRight size={13} />
             </button>
           </form>
@@ -392,6 +421,92 @@ export default function LandingPage() {
                 >
                   <Film size={14} /> Open in Pixel <ExternalLink size={12} />
                 </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3.5 NEW GEN VIDEO SUITE SPOTLIGHT (Unlimited Free Cloud Generation) */}
+      <section className="py-16 px-6 sm:px-12 max-w-7xl mx-auto border-t border-white/5 space-y-8">
+        <div className="relative rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/30 via-studio-900/80 to-studio-950 p-8 sm:p-12 shadow-2xl backdrop-blur-2xl overflow-hidden">
+          <div className="absolute top-0 right-0 h-96 w-96 rounded-full bg-emerald-500/10 blur-[130px] pointer-events-none" />
+          <div className="absolute bottom-0 left-0 h-64 w-64 rounded-full bg-apex-cyan/10 blur-[100px] pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
+            <div className="space-y-4 max-w-2xl">
+              <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/20 border border-emerald-500/30 px-3.5 py-1 text-xs font-bold text-emerald-400">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>UNLIMITED CLOUD VIDEO GENERATION</span>
+              </div>
+
+              <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
+                New Gen Video Suite
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-apex-lime to-apex-cyan">
+                  Zero Local Downloads • 100% Free & Unlimited
+                </span>
+              </h2>
+
+              <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                Direct access to high-performance open video architectures running entirely in the cloud. Your computer downloads zero gigabytes of model checkpoints, preserving your storage and performance.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                <div className="p-3.5 rounded-xl border border-white/10 bg-studio-950/80">
+                  <div className="text-[10px] font-mono text-emerald-400 font-bold uppercase">Provider: Wan-AI / Alibaba</div>
+                  <div className="font-display text-sm font-bold text-white mt-1">Wan 2.1 Video</div>
+                  <p className="text-[11px] text-zinc-400 mt-1">1080p diffusion, realistic physics & fluid motion curves.</p>
+                </div>
+
+                <div className="p-3.5 rounded-xl border border-white/10 bg-studio-950/80">
+                  <div className="text-[10px] font-mono text-apex-cyan font-bold uppercase">Provider: Lightricks Cloud</div>
+                  <div className="font-display text-sm font-bold text-white mt-1">LTX-Video 30FPS</div>
+                  <p className="text-[11px] text-zinc-400 mt-1">Real-time DiT architecture with instant camera controls.</p>
+                </div>
+
+                <div className="p-3.5 rounded-xl border border-white/10 bg-studio-950/80">
+                  <div className="text-[10px] font-mono text-purple-400 font-bold uppercase">Provider: THUDM / Zhipu AI</div>
+                  <div className="font-display text-sm font-bold text-white mt-1">CogVideoX-5B</div>
+                  <p className="text-[11px] text-zinc-400 mt-1">3D VAE video diffusion with curved camera rail paths.</p>
+                </div>
+              </div>
+
+              <div className="pt-4 flex flex-wrap items-center gap-4">
+                <Link
+                  href="/create/new-gen-video"
+                  className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-emerald-400 via-apex-lime to-apex-cyan text-black font-extrabold text-xs flex items-center gap-2 shadow-glow-lime hover:brightness-110 transition-all"
+                >
+                  <Video size={16} />
+                  <span>Launch New Gen Video Studio</span>
+                  <ArrowRight size={14} />
+                </Link>
+
+                <div className="text-[11px] text-zinc-400 font-mono flex items-center gap-2">
+                  <ShieldCheck size={14} className="text-emerald-400" />
+                  <span>Zero local compute • 100% remote streaming</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Video Preview Card */}
+            <div className="relative w-full lg:w-96 aspect-video rounded-2xl overflow-hidden border border-white/15 bg-black shadow-2xl flex-shrink-0 group">
+              <video
+                src="https://static-public-media.higgsfield.ai/cards/0019ff9b-e94d-4eec-893c-7ae8c953dc74.mp4"
+                poster="https://static.higgsfield.ai/kling-4.0/explore-banner-v2/landscape.webp"
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-4">
+                <div className="flex items-center justify-between">
+                  <span className="rounded bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 text-[9px] font-mono font-bold uppercase">
+                    Live Cloud Stream
+                  </span>
+                  <span className="text-[10px] text-zinc-300 font-mono">0 Credits</span>
+                </div>
+                <p className="text-xs text-white font-medium mt-1">Wan 2.1 • Nocturnal Tokyo Hypercar Drift</p>
               </div>
             </div>
           </div>
@@ -478,7 +593,37 @@ export default function LandingPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+          {/* Card 0: New Gen Video Suite */}
+          <div className="p-6 rounded-3xl border border-emerald-500/30 bg-emerald-950/20 hover:border-emerald-400/60 transition-all duration-300 shadow-glass-card flex flex-col justify-between group">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                  <Video size={22} />
+                </div>
+                <span className="rounded-full bg-emerald-500/20 border border-emerald-500/30 px-2.5 py-0.5 text-[9px] font-mono font-bold text-emerald-400">
+                  UNLIMITED
+                </span>
+              </div>
+
+              <h3 className="font-display text-base font-bold text-white group-hover:text-emerald-400 transition-colors">
+                New Gen Video Suite
+              </h3>
+              <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
+                Wan 2.1 & LTX-Video. 100% remote cloud execution with zero local downloads. Unlimited renders with custom durations up to 30 seconds.
+              </p>
+            </div>
+
+            <div className="pt-6 border-t border-white/5 mt-6">
+              <Link
+                href="/create/new-gen-video"
+                className="text-xs font-semibold text-emerald-400 hover:underline flex items-center gap-1.5"
+              >
+                <span>Launch New Gen Video</span>
+                <ArrowRight size={13} />
+              </Link>
+            </div>
+          </div>
           {/* Card 1: Atomic Apex Vision */}
           <div className="p-6 rounded-3xl border border-white/10 bg-studio-900/70 hover:border-[#C9A25E]/50 transition-all duration-300 shadow-glass-card flex flex-col justify-between group">
             <div>
