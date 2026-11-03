@@ -40,7 +40,7 @@ export default function ModernLandingPage() {
     {
       title: 'Wan 2.1 • Nocturnal Hypercar Drift',
       provider: 'Wan-AI / Alibaba Cloud',
-      url: 'https://vjs.zencdn.net/v/oceans.mp4',
+      url: 'https://raw.githubusercontent.com/intel-iot-devkit/sample-videos/master/car-detection.mp4',
       badge: 'UNLIMITED CLOUD',
     },
     {
@@ -52,7 +52,7 @@ export default function ModernLandingPage() {
     {
       title: 'CogVideoX • Cinematic Camera Rail',
       provider: 'THUDM / Zhipu AI Cloud',
-      url: 'https://media.w3.org/2010/05/sintel/trailer.mp4',
+      url: 'https://test-videos.co.uk/vids/sintel/mp4/h264/720/Sintel_720_10s_1MB.mp4',
       badge: 'OPEN CINEMA',
     },
   ];

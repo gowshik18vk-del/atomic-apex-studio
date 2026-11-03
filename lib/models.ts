@@ -276,23 +276,49 @@ const jobStore = new Map<string, {
   thumbUrl: string;
 }>();
 
-// Curated Video Assets for Production Visual Quality
-const CURATED_VIDEO_RESULTS = [
+// Curated Video Assets for Production Visual Quality matching diverse user prompts
+export const CURATED_VIDEO_RESULTS = [
   {
+    category: 'automotive',
+    keywords: ['car', 'drift', 'race', 'vehicle', 'drive', 'speed', 'hypercar', 'auto', 'road'],
+    video: 'https://raw.githubusercontent.com/intel-iot-devkit/sample-videos/master/car-detection.mp4',
+    poster: 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=1280&auto=format&fit=crop&q=85',
+  },
+  {
+    category: 'people',
+    keywords: ['people', 'human', 'walking', 'street', 'city', 'crowd', 'pedestrian', 'model', 'girl', 'woman', 'man'],
+    video: 'https://raw.githubusercontent.com/intel-iot-devkit/sample-videos/master/face-demographics-walking.mp4',
+    poster: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=1280&auto=format&fit=crop&q=85',
+  },
+  {
+    category: 'portrait',
+    keywords: ['face', 'portrait', 'eyes', 'head', 'look', 'close-up'],
+    video: 'https://raw.githubusercontent.com/intel-iot-devkit/sample-videos/master/head-pose-face-detection-female-and-male.mp4',
+    poster: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=1280&auto=format&fit=crop&q=85',
+  },
+  {
+    category: 'marine',
+    keywords: ['jellyfish', 'underwater', 'deep sea', 'marine', 'aquatic', 'fish', 'coral', 'glow', 'abyss'],
     video: 'https://test-videos.co.uk/vids/jellyfish/mp4/h264/720/Jellyfish_720_10s_1MB.mp4',
     poster: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1280&auto=format&fit=crop&q=85',
   },
   {
-    video: 'https://vjs.zencdn.net/v/oceans.mp4',
-    poster: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1280&auto=format&fit=crop&q=85',
+    category: 'fantasy_action',
+    keywords: ['fantasy', 'warrior', 'action', 'sword', 'dragon', 'blizzard', 'snow', 'winter', 'mountain', 'cinema'],
+    video: 'https://test-videos.co.uk/vids/sintel/mp4/h264/720/Sintel_720_10s_1MB.mp4',
+    poster: 'https://images.unsplash.com/photo-1511497584788-87676104235f?w=1280&auto=format&fit=crop&q=85',
   },
   {
-    video: 'https://vjs.zencdn.net/v/oceans.mp4',
-    poster: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1280&auto=format&fit=crop&q=85',
+    category: 'wildlife',
+    keywords: ['animal', 'wildlife', 'rabbit', 'bunny', 'forest', 'nature', 'green', 'meadow', 'trees'],
+    video: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_1MB.mp4',
+    poster: 'https://images.unsplash.com/photo-1535083783855-76ae62b2914e?w=1280&auto=format&fit=crop&q=85',
   },
   {
+    category: 'ocean',
+    keywords: ['ocean', 'sea', 'waves', 'water', 'beach', 'coast', 'aerial', 'island'],
     video: 'https://vjs.zencdn.net/v/oceans.mp4',
-    poster: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1280&auto=format&fit=crop&q=85',
+    poster: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1280&auto=format&fit=crop&q=85',
   },
 ];
 
@@ -422,13 +448,20 @@ export class MockStudioAdapter implements ProviderAdapter {
       };
     } else {
       // Video renders asynchronously with rapid response for seamless UX
-      const pick = CURATED_VIDEO_RESULTS[Math.floor(Math.random() * CURATED_VIDEO_RESULTS.length)];
+      const lower = (params.prompt || '').toLowerCase();
+      let matched = CURATED_VIDEO_RESULTS.find((item) =>
+        item.keywords.some((kw) => lower.includes(kw))
+      );
+      if (!matched) {
+        matched = CURATED_VIDEO_RESULTS[Math.abs(lower.length) % CURATED_VIDEO_RESULTS.length];
+      }
+
       jobStore.set(jobId, {
         status: 'queued',
         createdAt: Date.now(),
         durationMs: model.id === 'swift-v1' ? 1500 : 2500,
-        resultUrl: pick.video,
-        thumbUrl: pick.poster,
+        resultUrl: matched.video,
+        thumbUrl: matched.poster,
       });
 
       return {

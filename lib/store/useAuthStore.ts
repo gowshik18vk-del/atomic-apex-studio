@@ -29,7 +29,7 @@ const DEFAULT_ADMIN_PROFILE: UserProfile = {
   email: DEFAULT_ADMIN_EMAIL,
   fullName: 'Gowshik (Apex Founder)',
   avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-  credits: 100,
+  credits: 60,
   role: 'admin',
   createdAt: new Date().toISOString(),
 };
@@ -104,7 +104,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             email: fbUser.email || cleanEmail,
             fullName: fbUser.displayName || (isFounder ? DEFAULT_ADMIN_PROFILE.fullName : cleanEmail.split('@')[0]),
             avatarUrl: fbUser.photoURL || DEFAULT_ADMIN_PROFILE.avatarUrl,
-            credits: 100,
+            credits: 60,
             role: isFounder ? 'admin' : 'creator',
             createdAt: fbUser.metadata.creationTime || new Date().toISOString(),
           };
@@ -144,7 +144,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         email: cleanEmail,
         fullName: isFounder ? DEFAULT_ADMIN_PROFILE.fullName : cleanEmail.split('@')[0],
         avatarUrl: DEFAULT_ADMIN_PROFILE.avatarUrl,
-        credits: 100,
+        credits: 60,
         role: isFounder ? 'admin' : 'creator',
         createdAt: new Date().toISOString(),
       };
@@ -184,7 +184,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           email: fbUser.email || '',
           fullName: fbUser.displayName || fbUser.email?.split('@')[0] || 'Apex Creator',
           avatarUrl: fbUser.photoURL || DEFAULT_ADMIN_PROFILE.avatarUrl,
-          credits: 100,
+          credits: 60,
           role: fbUser.email?.toLowerCase() === DEFAULT_ADMIN_EMAIL.toLowerCase() ? 'admin' : 'creator',
           createdAt: fbUser.metadata.creationTime || new Date().toISOString(),
         };
@@ -222,7 +222,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       email: 'creator.google@atomic-apex.ai',
       fullName: 'Google Creator',
       avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-      credits: 100,
+      credits: 60,
       role: 'creator',
       createdAt: new Date().toISOString(),
     };
@@ -273,7 +273,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           email: cleanEmail,
           fullName: name || cleanEmail.split('@')[0],
           avatarUrl: DEFAULT_ADMIN_PROFILE.avatarUrl,
-          credits: 100,
+          credits: 60,
           role: 'creator',
           createdAt: new Date().toISOString(),
         };
@@ -308,7 +308,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       email: cleanEmail,
       fullName: name || cleanEmail.split('@')[0],
       avatarUrl: DEFAULT_ADMIN_PROFILE.avatarUrl,
-      credits: 100,
+      credits: 60,
       role: 'creator',
       createdAt: new Date().toISOString(),
     };
@@ -393,7 +393,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             email: fbUser.email || '',
             fullName: fbUser.displayName || fbUser.email?.split('@')[0] || 'Apex Creator',
             avatarUrl: fbUser.photoURL || DEFAULT_ADMIN_PROFILE.avatarUrl,
-            credits: 100,
+            credits: 60,
             role: fbUser.email?.toLowerCase() === DEFAULT_ADMIN_EMAIL.toLowerCase() ? 'admin' : 'creator',
             createdAt: fbUser.metadata.creationTime || new Date().toISOString(),
           };

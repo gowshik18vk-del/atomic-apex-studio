@@ -28,14 +28,38 @@ interface LedgerItem {
 }
 
 const INITIAL_LEDGER: LedgerItem[] = [
-  { id: 'led-1', delta: 100, reason: 'Initial Welcome Bonus Allocation', timestamp: new Date(Date.now() - 86400000 * 2).toISOString() },
+  { id: 'led-1', delta: 60, reason: 'Initial Free Starter Allocation (60 Credits)', timestamp: new Date(Date.now() - 86400000 * 2).toISOString() },
   { id: 'led-2', delta: -5, reason: 'Generation fee for Studio V1 (Cinema)', timestamp: new Date(Date.now() - 3600000 * 2).toISOString() },
   { id: 'led-3', delta: -2, reason: 'Generation fee for Apex Vision', timestamp: new Date(Date.now() - 3600000 * 1).toISOString() },
 ];
 
 export default function SettingsPage() {
   const { user, updateProfile } = useAuthStore();
-  const { credits, addCredits, resetCredits } = useCreditsStore();
+  const { credits, addCredits, resetCredits, isAdminUnlimited, redeemCode } = useCreditsStore();
+  const [adminCodeInput, setAdminCodeInput] = useState('');
+  const [adminCodeMsg, setAdminCodeMsg] = useState<{ success: boolean; text: string } | null>(null);
+
+  const handleRedeemAdmin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminCodeInput.trim()) return;
+    const res = redeemCode(adminCodeInput);
+    if (res.success) {
+      setAdminCodeMsg({ success: true, text: res.message });
+      setLedger([
+        {
+          id: 'led-' + Date.now(),
+          delta: 100,
+          reason: 'Admin Unlock Code 141211 (Unlimited Generation)',
+          timestamp: new Date().toISOString(),
+        },
+        ...ledger,
+      ]);
+      triggerConfetti();
+      setAdminCodeInput('');
+    } else {
+      setAdminCodeMsg({ success: false, text: res.message });
+    }
+  };
 
   const [fullName, setFullName] = useState(user?.fullName || 'Gowshik (Apex Founder)');
   const [ledger, setLedger] = useState<LedgerItem[]>(INITIAL_LEDGER);
@@ -129,6 +153,44 @@ export default function SettingsPage() {
               <RotateCcw size={13} />
             </button>
           </div>
+        </div>
+
+        {/* Admin Unlimited Mode & Code Redemption */}
+        <div className="p-4 rounded-2xl bg-studio-950 border border-white/5 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Key size={15} className="text-amber-400" />
+              <span className="text-xs font-bold text-white">Admin Code Unlock (141211)</span>
+            </div>
+            {isAdminUnlimited && (
+              <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[9px] font-bold text-amber-300 border border-amber-500/30">
+                ADMIN UNLIMITED ACTIVE
+              </span>
+            )}
+          </div>
+          <p className="text-[11px] text-zinc-400">
+            Enter admin code <code className="text-amber-400 font-mono">141211</code> to instantly claim 100 extra credits and unlock lifetime unlimited video generation with 0 deductions.
+          </p>
+          <form onSubmit={handleRedeemAdmin} className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Enter Code 141211"
+              value={adminCodeInput}
+              onChange={(e) => setAdminCodeInput(e.target.value)}
+              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-mono text-white placeholder-zinc-500 focus:outline-none focus:border-amber-400 flex-1 max-w-xs"
+            />
+            <button
+              type="submit"
+              className="rounded-xl bg-amber-500 hover:bg-amber-400 text-black px-4 py-2 text-xs font-bold transition-all"
+            >
+              Unlock Unlimited
+            </button>
+          </form>
+          {adminCodeMsg && (
+            <p className={`text-xs ${adminCodeMsg.success ? 'text-emerald-400' : 'text-red-400'}`}>
+              {adminCodeMsg.text}
+            </p>
+          )}
         </div>
       </div>
 

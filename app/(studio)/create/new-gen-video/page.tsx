@@ -1,3 +1,4 @@
+// app/(studio)/create/new-gen-video/page.tsx
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -27,9 +28,13 @@ import {
   ChevronDown,
   ArrowRight,
   ExternalLink,
+  Key,
+  Crown,
+  AlertCircle,
 } from 'lucide-react';
 import { NEW_GEN_VIDEO_MODELS } from '@/lib/constants/models';
 import { useGenerationStore } from '@/lib/store/useGenerationStore';
+import { useCreditsStore } from '@/lib/store/useCreditsStore';
 import { triggerConfetti } from '@/lib/utils';
 import { Generation } from '@/lib/types';
 
@@ -37,13 +42,19 @@ const PRESET_CINEMATIC_PROMPTS = [
   'Futuristic electric hypercar drifting through nocturnal Tokyo overpass, anamorphic lens flares, motion blur, octane render',
   'Golden eagle soaring through crystalline glacial canyon at sunrise, volumetric morning mist, ultra-smooth 60fps tracking camera',
   'Ethereal cyberpunk cyborg woman gazing across floating neon metropolis in rain, hyper-detailed reflections, 8k cinematic lighting',
-  'Liquid crystal fragrance bottle shattering into floating golden droplets, hyper-detailed macro photography, studio spotlight sweep',
-  'Deep space exploration vessel entering iridescent wormhole event horizon, gravitational lensing, interstellar cinema scale',
-  'Bioluminescent underwater manta ray gliding through abyssal deep-sea trench with glowing coral reef below',
+  'Deep sea bioluminescent jellyfish pulsing with neon cyan glow in midnight ocean abyss, macro underwater cinematography',
+  'Cute fluffy rabbit hopping through sunny vibrant wildflower meadow, ultra-high definition nature documentary 4k',
+  'Epic fantasy warrior standing on cliff facing blizzard mountain winds, dramatic cinema 3D render',
+  'High-fashion streetwear model walking in Tokyo night street, anamorphic lens flare, cinematic slow motion stride',
 ];
 
 export default function NewGenVideoStudioPage() {
   const { addGeneration, generations } = useGenerationStore();
+  const { credits, isAdminUnlimited, redeemCode, deductCredits, syncWithDatabase } = useCreditsStore();
+
+  useEffect(() => {
+    syncWithDatabase();
+  }, [syncWithDatabase]);
 
   // Model & Generation State
   const [selectedModelId, setSelectedModelId] = useState(NEW_GEN_VIDEO_MODELS[0].id);
@@ -62,23 +73,27 @@ export default function NewGenVideoStudioPage() {
   const [copied, setCopied] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
-  const [showSettingsDrawer, setShowSettingsDrawer] = useState(false);
+
+  // Admin Code State
+  const [adminModalOpen, setAdminModalOpen] = useState(false);
+  const [adminInputCode, setAdminInputCode] = useState('');
+  const [adminFeedback, setAdminFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const currentModel =
     NEW_GEN_VIDEO_MODELS.find((m) => m.id === selectedModelId) || NEW_GEN_VIDEO_MODELS[0];
 
-  // Default initial video result
+  // Default initial video result (matches default automotive prompt)
   const [activeVideo, setActiveVideo] = useState<Generation>({
     id: 'init-newgen-1',
     userId: 'user',
     type: 'video',
     model: currentModel.name,
-    prompt: prompt,
-    outputUrl: 'https://vjs.zencdn.net/v/oceans.mp4',
+    prompt: 'Futuristic electric hypercar drifting through nocturnal Tokyo overpass, anamorphic lens flares, motion blur',
+    outputUrl: 'https://raw.githubusercontent.com/intel-iot-devkit/sample-videos/master/car-detection.mp4',
     thumbnailUrl:
-      'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1280&auto=format&fit=crop&q=85',
+      'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=1280&auto=format&fit=crop&q=85',
     aspectRatio: '16:9',
     duration: '10s',
     creditsCost: 0,
@@ -117,8 +132,34 @@ export default function NewGenVideoStudioPage() {
     }
   };
 
+  const handleAdminCodeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminInputCode.trim()) return;
+
+    const res = redeemCode(adminInputCode);
+    if (res.success) {
+      setAdminFeedback({ type: 'success', message: res.message });
+      triggerConfetti();
+      setTimeout(() => {
+        setAdminModalOpen(false);
+        setAdminInputCode('');
+        setAdminFeedback(null);
+      }, 2500);
+    } else {
+      setAdminFeedback({ type: 'error', message: res.message });
+    }
+  };
+
   const handleGenerate = async () => {
     if (!prompt.trim() || isGenerating) return;
+
+    // Check credits if not admin & not unlimited
+    const cost = 0; // New Gen Video models are free/unlimited
+    if (!isAdminUnlimited && cost > 0 && credits < cost) {
+      alert('Insufficient credits. Please redeem Admin Code 141211 for unlimited access!');
+      setAdminModalOpen(true);
+      return;
+    }
 
     setIsGenerating(true);
     setGenerationProgress(10);
@@ -133,13 +174,13 @@ export default function NewGenVideoStudioPage() {
             return 90;
           }
           if (prev === 30) {
-            setProgressStage(`Synthesizing motion vectors with ${currentModel.name}...`);
+            setProgressStage(`Synthesizing motion vectors for "${prompt.slice(0, 30)}..."`);
           } else if (prev === 60) {
-            setProgressStage('Encoding 1080p MP4 stream in cloud (0% local GPU used)...');
+            setProgressStage('Encoding dynamic 1080p stream in cloud (0 bytes local GPU used)...');
           }
           return prev + 15;
         });
-      }, 300);
+      }, 350);
 
       // Step 2: Call the backend video synthesis endpoint
       const res = await fetch('/api/generate/video', {
@@ -165,6 +206,11 @@ export default function NewGenVideoStudioPage() {
       setGenerationProgress(100);
       setProgressStage('Rendering Complete!');
 
+      // Deduct credits if applicable
+      if (cost > 0 && !isAdminUnlimited) {
+        deductCredits(cost);
+      }
+
       // Short delay for visual polish
       await new Promise((r) => setTimeout(r, 400));
 
@@ -174,11 +220,11 @@ export default function NewGenVideoStudioPage() {
         type: 'video',
         model: currentModel.name,
         prompt: prompt.trim(),
-        outputUrl: data.output_url || 'https://vjs.zencdn.net/v/oceans.mp4',
-        thumbnailUrl: data.thumbnail_url || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1280&auto=format&fit=crop&q=85',
+        outputUrl: data.output_url || 'https://raw.githubusercontent.com/intel-iot-devkit/sample-videos/master/car-detection.mp4',
+        thumbnailUrl: data.thumbnail_url || 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=1280&auto=format&fit=crop&q=85',
         aspectRatio: aspectRatio,
         duration: duration,
-        creditsCost: 0,
+        creditsCost: cost,
         isFavorite: false,
         createdAt: new Date().toISOString(),
         parameters: {
@@ -187,6 +233,7 @@ export default function NewGenVideoStudioPage() {
           fps,
           unlimited: true,
           cloudRendered: true,
+          categoryMatched: data.category_matched,
         },
         status: 'completed',
       };
@@ -232,6 +279,11 @@ export default function NewGenVideoStudioPage() {
                 <span className="flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-bold text-emerald-400">
                   <InfinityIcon size={12} /> UNLIMITED CLOUD
                 </span>
+                {isAdminUnlimited && (
+                  <span className="flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-bold text-amber-300">
+                    <Crown size={12} className="text-amber-400" /> ADMIN MODE
+                  </span>
+                )}
               </div>
               <span className="text-[10px] text-zinc-400 font-mono">
                 100% remote execution • 0 bytes downloaded to your machine
@@ -266,16 +318,38 @@ export default function NewGenVideoStudioPage() {
             })}
           </div>
 
-          {/* Right Provider & Specs */}
-          <div className="hidden md:flex items-center gap-4 text-xs">
-            <div className="flex items-center gap-1.5 text-zinc-300 font-mono">
-              <Cloud size={14} className="text-apex-cyan" />
-              <span>Provider: <strong className="text-white">{currentModel.provider}</strong></span>
-            </div>
-            <div className="h-4 w-px bg-white/10" />
-            <div className="flex items-center gap-1 text-emerald-400 font-bold">
-              <CheckCircle2 size={14} />
-              <span>Free & Unlimited</span>
+          {/* Right Provider, Admin Code & Credits */}
+          <div className="flex items-center gap-3 text-xs">
+            {/* Admin Code Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setAdminModalOpen(true);
+                setAdminFeedback(null);
+              }}
+              className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition-all ${
+                isAdminUnlimited
+                  ? 'border-amber-500/30 bg-amber-500/10 text-amber-300'
+                  : 'border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10 hover:border-white/20'
+              }`}
+            >
+              {isAdminUnlimited ? (
+                <>
+                  <Crown size={13} className="text-amber-400" />
+                  <span>Admin Unlimited Active</span>
+                </>
+              ) : (
+                <>
+                  <Key size={13} className="text-amber-400" />
+                  <span>Admin Code (141211)</span>
+                </>
+              )}
+            </button>
+
+            {/* Credits Pill */}
+            <div className="flex items-center gap-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-300">
+              <Zap size={13} className="text-amber-400 fill-current animate-pulse" />
+              <span>{isAdminUnlimited ? '∞ UNLIMITED' : `${credits} CR`}</span>
             </div>
           </div>
         </div>
@@ -432,7 +506,7 @@ export default function NewGenVideoStudioPage() {
                   }`}
                 >
                   <img
-                    src={item.thumbnailUrl || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1280&auto=format&fit=crop&q=85'}
+                    src={item.thumbnailUrl || 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=1280&auto=format&fit=crop&q=85'}
                     alt={item.prompt}
                     className="h-full w-full object-cover transition-transform group-hover:scale-105"
                   />
@@ -581,6 +655,87 @@ export default function NewGenVideoStudioPage() {
           </div>
         </div>
       </div>
+
+      {/* Admin Code Modal */}
+      {adminModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+          <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#0c1017] p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                  <Key size={18} />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-white">Admin Access Code</h3>
+                  <p className="text-xs text-zinc-400">Unlock 100 Credits & Unlimited Generations</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAdminModalOpen(false)}
+                className="text-zinc-500 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            {isAdminUnlimited && (
+              <div className="mb-4 flex items-center gap-2 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs font-semibold text-amber-300">
+                <Crown size={16} className="text-amber-400 shrink-0" />
+                <span>Admin Unlimited Mode is active! Free unlimited video renders.</span>
+              </div>
+            )}
+
+            <form onSubmit={handleAdminCodeSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                  Enter 6-Digit Admin Code
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. 141211"
+                  value={adminInputCode}
+                  onChange={(e) => setAdminInputCode(e.target.value)}
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-mono text-white placeholder-zinc-500 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
+                />
+              </div>
+
+              {adminFeedback && (
+                <div
+                  className={`flex items-center gap-2 rounded-2xl p-3 text-xs font-medium ${
+                    adminFeedback.type === 'success'
+                      ? 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                      : 'border border-red-500/30 bg-red-500/10 text-red-300'
+                  }`}
+                >
+                  {adminFeedback.type === 'success' ? (
+                    <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
+                  ) : (
+                    <AlertCircle size={16} className="text-red-400 shrink-0" />
+                  )}
+                  <span>{adminFeedback.message}</span>
+                </div>
+              )}
+
+              <div className="flex gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setAdminModalOpen(false)}
+                  className="flex-1 rounded-2xl border border-white/10 bg-white/5 py-2.5 text-xs font-semibold text-zinc-300 hover:bg-white/10"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 py-2.5 text-xs font-bold text-black hover:opacity-90 transition-opacity"
+                >
+                  Activate Admin Code
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
