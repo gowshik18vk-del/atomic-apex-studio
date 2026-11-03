@@ -8,7 +8,7 @@ const generateSchema = z.object({
   prompt: z.string().min(2, 'Prompt must be at least 2 characters').max(2000),
   negativePrompt: z.string().max(1000).optional(),
   aspectRatio: z.enum(['1:1', '16:9', '9:16', '4:3', '21:9', '4:5']).default('16:9'),
-  duration: z.enum(['5s', '10s']).optional(),
+  duration: z.string().optional(),
   fps: z.number().int().min(24).max(60).optional(),
   cameraMotion: z.string().optional(),
   sourceImage: z.string().url().optional().or(z.literal('')),

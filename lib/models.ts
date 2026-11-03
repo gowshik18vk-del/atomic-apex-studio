@@ -5,7 +5,16 @@ export interface ModelConfig {
   id: string;
   label: string;
   kind: 'image' | 'video' | 'chat' | 'multimodal';
-  provider: 'atomic-labs' | 'openai' | 'gemini' | 'replicate' | 'mock';
+  provider:
+    | 'atomic-labs'
+    | 'openai'
+    | 'gemini'
+    | 'replicate'
+    | 'mock'
+    | 'Wan-AI / Alibaba Cloud'
+    | 'Lightricks Cloud'
+    | 'THUDM / Zhipu AI Cloud'
+    | (string & {});
   providerModelId: string;
   creditCost: number;
   supportedAspectRatios: string[];
@@ -135,6 +144,42 @@ export const MODEL_REGISTRY: Record<string, ModelConfig> = {
     supportedDurations: ['5s', '10s'],
     description: 'Multi-prompt camera trajectories with deep physics simulation and fluid liquid/cloth movement.',
     badge: 'PRO MOVIE',
+  },
+  'wan-2-1': {
+    id: 'wan-2-1',
+    label: 'Wan 2.1 Cloud Video',
+    kind: 'video',
+    provider: 'Wan-AI / Alibaba Cloud',
+    providerModelId: 'wan-2.1-t2v-cloud',
+    creditCost: 0,
+    supportedAspectRatios: ['16:9', '9:16', '1:1', '21:9'],
+    supportedDurations: ['5s', '10s', '15s', '30s'],
+    description: 'Next-gen open cinematic diffusion video generator hosted entirely on remote cloud GPU clusters. 100% remote execution with zero local downloads.',
+    badge: 'UNLIMITED CLOUD',
+  },
+  'ltx-video': {
+    id: 'ltx-video',
+    label: 'LTX-Video 30FPS (Cloud)',
+    kind: 'video',
+    provider: 'Lightricks Cloud',
+    providerModelId: 'ltx-video-dit-cloud',
+    creditCost: 0,
+    supportedAspectRatios: ['16:9', '9:16', '1:1'],
+    supportedDurations: ['5s', '10s', '15s'],
+    description: 'Ultra-fast 30FPS DiT video generation architecture hosted on Lightricks remote cloud infrastructure. Zero local compute or download required.',
+    badge: 'FAST DiT CLOUD',
+  },
+  'cogvideox-5b': {
+    id: 'cogvideox-5b',
+    label: 'CogVideoX-5B Cinema (Cloud)',
+    kind: 'video',
+    provider: 'THUDM / Zhipu AI Cloud',
+    providerModelId: 'cogvideox-5b-cloud',
+    creditCost: 0,
+    supportedAspectRatios: ['16:9', '21:9'],
+    supportedDurations: ['5s', '10s'],
+    description: 'Expert cinematic video diffusion model running on remote clusters. Optimized for complex camera motions and fluid physics.',
+    badge: 'OPEN CINEMA',
   },
 
   // --- MULTIMODAL & CREATOR STUDIO MODELS ---

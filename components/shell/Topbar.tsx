@@ -9,6 +9,7 @@ import {
   Zap,
   Sparkles,
   Film,
+  Video,
   Layers,
   Code2,
   ChevronDown,
@@ -36,6 +37,7 @@ export default function Topbar({ collapsed, onOpenMobile }: TopbarProps) {
   const quickTools = [
     { name: 'Image', href: '/create/image', icon: Sparkles },
     { name: 'Video', href: '/create/video', icon: Film },
+    { name: 'New Gen Video', href: '/create/new-gen-video', icon: Video },
     { name: 'Studio', href: '/studio', icon: Layers },
     { name: 'API Runner', href: '/chat', icon: Code2 },
   ];

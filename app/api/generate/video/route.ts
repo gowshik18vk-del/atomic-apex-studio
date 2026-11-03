@@ -44,16 +44,30 @@ export async function POST(req: NextRequest) {
     const randomPick = CURATED_VIDEOS[Math.floor(Math.random() * CURATED_VIDEOS.length)];
     const id = 'gen-vid-' + Date.now();
 
+    const isFreeUnlimited = ['wan-2-1', 'ltx-video', 'cogvideox-5b'].includes(model);
+    const providerMap: Record<string, string> = {
+      'wan-2-1': 'Wan-AI / Alibaba Cloud',
+      'ltx-video': 'Lightricks Cloud',
+      'cogvideox-5b': 'THUDM / Zhipu AI Cloud',
+      'swift-v1': 'Atomic Video Engine',
+      'studio-v1': 'Atomic Cinema',
+      'range': 'Apex Motion',
+      'kling-4-0': 'Kuaishou / Apex Bridge',
+    };
+
     const result = {
       id,
       type: 'video',
       model,
+      provider: providerMap[model] || 'Cloud Engine',
       prompt,
       output_url: randomPick.video,
       thumbnail_url: randomPick.poster,
       aspect_ratio,
       duration,
-      credits_cost: 5,
+      credits_cost: isFreeUnlimited ? 0 : 5,
+      is_unlimited: isFreeUnlimited,
+      cloud_rendered: true,
       created_at: new Date().toISOString(),
       status: 'completed',
       parameters: {
