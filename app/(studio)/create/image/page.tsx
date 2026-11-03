@@ -21,7 +21,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { MODEL_REGISTRY } from '@/lib/models';
-import { ASPECT_RATIOS, STYLE_PRESETS } from '@/lib/constants/models';
+import { ASPECT_RATIOS, STYLE_PRESETS, IMAGE_MODELS } from '@/lib/constants/models';
 import { useGenerationStore } from '@/lib/store/useGenerationStore';
 import { useCreditsStore } from '@/lib/store/useCreditsStore';
 import { triggerConfetti } from '@/lib/utils';
@@ -41,7 +41,12 @@ export default function CreateImagePage() {
     useGenerationStore();
   const { deductCredits, credits } = useCreditsStore();
 
-  const apexModel = MODEL_REGISTRY['apex-vision'];
+  const [selectedModelId, setSelectedModelId] = useState('apex-vision-v2');
+  const activeModel =
+    MODEL_REGISTRY[selectedModelId] ||
+    MODEL_REGISTRY['apex-vision-v2'] ||
+    MODEL_REGISTRY['apex-vision'];
+
   const [prompt, setPrompt] = useState('');
   const [negativePrompt, setNegativePrompt] = useState('');
   const [showNegative, setShowNegative] = useState(false);
@@ -79,22 +84,22 @@ export default function CreateImagePage() {
       return;
     }
 
-    if (credits < apexModel.creditCost) {
+    if (credits < activeModel.creditCost) {
       alert('Insufficient credits! You can claim +50 free credits from the sidebar or settings.');
       return;
     }
 
     // Deduct credits server-side / client store
-    const deducted = deductCredits(apexModel.creditCost);
+    const deducted = deductCredits(activeModel.creditCost);
     if (!deducted) return;
 
     setIsGenerating(true);
     setProgress(15);
-    setStage('Analyzing prompt vectors & negative anchors...');
+    setStage(`Analyzing prompt vectors & latents for ${activeModel.label}...`);
 
     const timer1 = setTimeout(() => {
       setProgress(45);
-      setStage('Denoising neural latents with Apex Vision engine...');
+      setStage(`Denoising latents with ${activeModel.label} engine...`);
     }, 800);
 
     const timer2 = setTimeout(() => {
@@ -107,7 +112,7 @@ export default function CreateImagePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'apex-vision',
+          model: selectedModelId,
           prompt,
           negativePrompt: showNegative ? negativePrompt : undefined,
           aspectRatio,
@@ -130,7 +135,7 @@ export default function CreateImagePage() {
         id: data.id || 'gen-' + Date.now(),
         userId: 'a0000000-0000-0000-0000-000000000001',
         type: 'image',
-        model: 'Apex Vision',
+        model: activeModel.label,
         prompt,
         negativePrompt: showNegative ? negativePrompt : undefined,
         parameters: { guidance, steps, quality, style: selectedStyle },
@@ -138,7 +143,7 @@ export default function CreateImagePage() {
         outputUrl: data.resultUrl || data.thumbUrl,
         thumbnailUrl: data.thumbUrl || data.resultUrl,
         aspectRatio,
-        creditsCost: apexModel.creditCost,
+        creditsCost: activeModel.creditCost,
         isFavorite: false,
         createdAt: new Date().toISOString(),
       };
@@ -173,7 +178,7 @@ export default function CreateImagePage() {
               Create Image
             </h1>
             <span className="rounded-full bg-apex-lime/15 px-2.5 py-0.5 text-[10px] font-bold text-apex-lime uppercase tracking-wider">
-              Apex Vision Default
+              {activeModel.label}
             </span>
           </div>
           <p className="mt-1 text-xs text-zinc-400">
@@ -182,31 +187,57 @@ export default function CreateImagePage() {
         </div>
 
         <div className="flex items-center gap-2 text-xs font-mono text-zinc-400 bg-studio-900 px-3 py-1.5 rounded-xl border border-white/5">
-          <span>Cost: <strong className="text-apex-lime">⚡ {apexModel.creditCost} credits</strong></span>
+          <span>Cost: <strong className="text-apex-lime">⚡ {activeModel.creditCost} credits</strong></span>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column: Prompting & Controls (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
-          {/* Active Model Card */}
-          <div className="p-4 rounded-2xl border border-apex-lime/30 bg-apex-lime/5 space-y-2 shadow-glow-subtle">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-apex-lime animate-pulse" />
-                <h3 className="text-xs font-bold text-white">Apex Vision (Native Flagship)</h3>
-              </div>
-              <span className="rounded bg-apex-lime text-black px-1.5 py-0.5 text-[9px] font-bold font-mono uppercase">
-                ACTIVE MODEL
-              </span>
+          {/* Multi-Model Selector Grid */}
+          <div className="space-y-2">
+            <label className="text-[11px] font-semibold text-zinc-300 uppercase tracking-wider block">
+              Select AI Image Model
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {IMAGE_MODELS.map((m) => {
+                const isSelected = selectedModelId === m.id;
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setSelectedModelId(m.id)}
+                    className={`p-2.5 rounded-xl border text-left transition-all relative ${
+                      isSelected
+                        ? 'border-apex-lime bg-apex-lime/10 text-white shadow-glow-subtle'
+                        : 'border-white/10 bg-studio-900/60 hover:bg-white/5 text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1 mb-1">
+                      <span className="text-xs font-bold truncate">{m.name}</span>
+                      {m.badge && (
+                        <span className={`text-[8px] font-mono px-1 py-0.5 rounded font-bold uppercase ${
+                          isSelected ? 'bg-apex-lime text-black' : 'bg-white/10 text-zinc-300'
+                        }`}>
+                          {m.badge}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] font-mono block text-apex-lime/90 font-semibold">
+                      ⚡ {m.creditsCost} cr
+                    </span>
+                  </button>
+                );
+              })}
             </div>
-            <p className="text-[11px] text-zinc-400 leading-relaxed">
-              {apexModel.description}
-            </p>
-            <div className="flex items-center justify-between pt-1 text-[10px] text-zinc-500 font-mono">
-              <span>Atomic Labs Neural Synthesis</span>
-              <span className="text-apex-lime font-bold">⚡ {apexModel.creditCost} credits per generation</span>
-            </div>
+          </div>
+
+          {/* Active Model Summary */}
+          <div className="p-3.5 rounded-xl border border-white/10 bg-studio-900/40 text-[11px] text-zinc-400 leading-relaxed flex items-center justify-between">
+            <span>{activeModel.description}</span>
+            <span className="text-[10px] font-mono text-zinc-500 whitespace-nowrap pl-2">
+              {activeModel.provider}
+            </span>
           </div>
 
           {/* Prompt Box */}
@@ -368,7 +399,7 @@ export default function CreateImagePage() {
             <Zap size={16} className="fill-current" />
             {isGenerating
               ? 'Synthesizing Imagery...'
-              : `Generate Image (${apexModel.creditCost} Credits)`}
+              : `Generate Image (${activeModel.creditCost} Credits)`}
           </button>
         </div>
 

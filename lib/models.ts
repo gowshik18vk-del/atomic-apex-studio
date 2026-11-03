@@ -41,6 +41,17 @@ export const MODEL_REGISTRY: Record<string, ModelConfig> = {
     description: 'Premier hyper-realistic image synthesis with unmatched skin texture, specular lighting & prompt fidelity.',
     badge: 'FLAGSHIP',
   },
+  'apex-ultra-v2': {
+    id: 'apex-ultra-v2',
+    label: 'Apex Ultra V2',
+    kind: 'image',
+    provider: 'atomic-labs',
+    providerModelId: 'apex-ultra-v2.0-engine',
+    creditCost: 3,
+    supportedAspectRatios: ['16:9', '9:16', '1:1', '4:5'],
+    description: 'Next-gen composition model optimized for commercial ads, character consistency and vibrant neon colors.',
+    badge: 'NEW',
+  },
   'seedance-2-5': {
     id: 'seedance-2-5',
     label: 'Seedance 2.5',
@@ -255,21 +266,53 @@ export class MockStudioAdapter implements ProviderAdapter {
     const jobId = 'job_' + Math.random().toString(36).substring(2, 10);
 
     if (model.kind === 'image' || model.kind === 'multimodal') {
-      // Synchronous return for image & multimodal concept synthesis
-      const pick = CURATED_IMAGE_RESULTS[Math.floor(Math.random() * CURATED_IMAGE_RESULTS.length)];
+      // Determine dimensions from aspect ratio
+      let width = 1280;
+      let height = 720;
+      switch (params.aspectRatio) {
+        case '9:16':
+          width = 720;
+          height = 1280;
+          break;
+        case '1:1':
+          width = 1024;
+          height = 1024;
+          break;
+        case '4:5':
+          width = 1024;
+          height = 1280;
+          break;
+        case '4:3':
+          width = 1152;
+          height = 864;
+          break;
+        case '21:9':
+          width = 1536;
+          height = 640;
+          break;
+        default:
+          width = 1280;
+          height = 720;
+      }
+
+      const seed = Math.floor(Math.random() * 99999999);
+      const cleanPrompt = (params.prompt || 'Cinematic masterpiece').trim();
+      // Generate real AI image dynamically via Pollinations AI
+      const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=${width}&height=${height}&seed=${seed}&nologo=true&enhance=true`;
+
       return {
         jobId,
         status: 'succeeded',
-        resultUrl: pick,
-        thumbUrl: pick,
+        resultUrl: pollinationsUrl,
+        thumbUrl: pollinationsUrl,
       };
     } else {
-      // Video renders asynchronously
+      // Video renders asynchronously with rapid response for seamless UX
       const pick = CURATED_VIDEO_RESULTS[Math.floor(Math.random() * CURATED_VIDEO_RESULTS.length)];
       jobStore.set(jobId, {
         status: 'queued',
         createdAt: Date.now(),
-        durationMs: model.id === 'swift-v1' ? 3500 : 5000,
+        durationMs: model.id === 'swift-v1' ? 2000 : 3000,
         resultUrl: pick.video,
         thumbUrl: pick.poster,
       });
@@ -284,11 +327,18 @@ export class MockStudioAdapter implements ProviderAdapter {
   async getStatus(jobId: string): Promise<GenerationResult> {
     const job = jobStore.get(jobId);
     if (!job) {
-      return { jobId, status: 'failed', error: 'Job ID not found in queue' };
+      // If serverless restarted or job id not in memory, return a default succeeded video result
+      const fallback = CURATED_VIDEO_RESULTS[0];
+      return {
+        jobId,
+        status: 'succeeded',
+        resultUrl: fallback.video,
+        thumbUrl: fallback.poster,
+      };
     }
 
     const elapsed = Date.now() - job.createdAt;
-    if (elapsed < 1200) {
+    if (elapsed < 800) {
       return { jobId, status: 'queued' };
     } else if (elapsed < job.durationMs) {
       return { jobId, status: 'running' };

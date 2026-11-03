@@ -61,8 +61,28 @@ export async function POST(req: NextRequest) {
       category = 'nature';
     }
 
+    // Calculate dimensions from aspect ratio
+    let width = 1280;
+    let height = 720;
+    if (aspect_ratio === '9:16') {
+      width = 720;
+      height = 1280;
+    } else if (aspect_ratio === '1:1') {
+      width = 1024;
+      height = 1024;
+    } else if (aspect_ratio === '4:5') {
+      width = 1024;
+      height = 1280;
+    } else if (aspect_ratio === '21:9') {
+      width = 1536;
+      height = 640;
+    }
+
+    const seed = Math.floor(Math.random() * 99999999);
+    const dynamicUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt + ' ' + (style || 'cinematic'))}?width=${width}&height=${height}&seed=${seed}&nologo=true&enhance=true`;
+
     const pool = CURATED_IMAGE_POOLS[category] || CURATED_IMAGE_POOLS.cyberpunk;
-    const selectedUrl = pool[Math.floor(Math.random() * pool.length)];
+    const fallbackUrl = pool[Math.floor(Math.random() * pool.length)];
 
     const id = 'gen-img-' + Date.now();
     const result = {
@@ -71,8 +91,8 @@ export async function POST(req: NextRequest) {
       model,
       prompt,
       negative_prompt,
-      output_url: selectedUrl,
-      thumbnail_url: selectedUrl,
+      output_url: dynamicUrl || fallbackUrl,
+      thumbnail_url: dynamicUrl || fallbackUrl,
       aspect_ratio,
       style,
       credits_cost: 2,
@@ -81,7 +101,7 @@ export async function POST(req: NextRequest) {
       parameters: {
         guidance_scale: 7.5,
         steps: 32,
-        seed: Math.floor(Math.random() * 99999999),
+        seed,
         sampler: 'Euler a / DPM++ 2M Karras',
       },
     };

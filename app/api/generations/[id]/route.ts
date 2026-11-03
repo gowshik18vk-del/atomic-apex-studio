@@ -26,6 +26,9 @@ export async function GET(
       error: statusResult.error,
     });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Status check failed' }, { status: 500 });
+    return NextResponse.json(
+      { error: err.message || 'Status check failed' },
+      { status: 500 }
+    );
   }
 }

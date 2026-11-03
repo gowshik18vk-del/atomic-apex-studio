@@ -53,7 +53,8 @@ export default function CreateVideoPage() {
     MODEL_REGISTRY['swift-v1'],
     MODEL_REGISTRY['studio-v1'],
     MODEL_REGISTRY['range'],
-  ];
+    MODEL_REGISTRY['kling-4-0'],
+  ].filter(Boolean);
 
   const [selectedModelId, setSelectedModelId] = useState(videoModels[0].id);
   const [generationMode, setGenerationMode] = useState<'text' | 'image'>(
@@ -164,7 +165,7 @@ export default function CreateVideoPage() {
       } catch (e) {
         console.error('Polling error:', e);
       }
-    }, 2500);
+    }, 1200);
 
     return () => clearInterval(interval);
   }, [activeJob, currentModel]);
