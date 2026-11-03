@@ -151,12 +151,15 @@ export default function LandingPage() {
 
         {/* Center Navigation Pills - Directing to user's products */}
         <nav className="hidden lg:flex items-center gap-1 p-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-md text-xs font-semibold text-zinc-300">
-          <Link
-            href="/dashboard"
-            className="px-3.5 py-1.5 rounded-full hover:text-white hover:bg-white/10 transition-all text-apex-lime"
+          <a
+            href={ATOMIC_LINKS.creatorStudio}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3.5 py-1.5 rounded-full hover:text-white hover:bg-white/10 transition-all text-apex-lime flex items-center gap-1"
           >
-            Explore
-          </Link>
+            <span>Explore Studio</span>
+            <ExternalLink size={11} className="text-zinc-500" />
+          </a>
           <a
             href={ATOMIC_LINKS.vision}
             target="_blank"
@@ -199,8 +202,10 @@ export default function LandingPage() {
         {/* Right Auth / Action */}
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
-            <Link
-              href="/dashboard"
+            <a
+              href={ATOMIC_LINKS.creatorStudio}
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-[#C9A25E]/40 bg-[#C9A25E]/10 text-xs font-semibold text-[#C9A25E] hover:bg-[#C9A25E]/20 transition-all"
             >
               <span className="h-2 w-2 rounded-full bg-apex-lime animate-pulse" />
@@ -208,7 +213,7 @@ export default function LandingPage() {
               <span className="rounded bg-[#C9A25E]/20 px-1.5 py-0.5 text-[9px] font-mono text-white">
                 {user?.credits || 100} CR
               </span>
-            </Link>
+            </a>
           ) : (
             <Link
               href="/login"

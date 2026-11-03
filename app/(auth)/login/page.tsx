@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/useAuthStore';
 import { triggerConfetti } from '@/lib/utils';
+import { ATOMIC_LINKS } from '@/lib/constants/links';
 
 function GoogleIcon({ className = 'h-4 w-4' }: { className?: string }) {
   return (
@@ -57,7 +58,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      window.location.href = '/dashboard';
+      window.location.href = ATOMIC_LINKS.creatorStudio;
     }
   }, [isAuthenticated]);
 
@@ -75,7 +76,7 @@ export default function LoginPage() {
       const res = await signInWithGoogle();
       if (res.success) {
         triggerConfetti();
-        window.location.href = '/dashboard';
+        window.location.href = ATOMIC_LINKS.creatorStudio;
       } else {
         setErrorMsg(res.error || 'Failed to authenticate with Google.');
         setIsGoogleLoading(false);
@@ -100,7 +101,7 @@ export default function LoginPage() {
       const res = await signIn(email, password);
       if (res.success) {
         triggerConfetti();
-        window.location.href = '/dashboard';
+        window.location.href = ATOMIC_LINKS.creatorStudio;
       } else {
         setErrorMsg(res.error || 'Authentication failed. Please verify credentials.');
       }

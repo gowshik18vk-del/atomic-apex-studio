@@ -39,7 +39,7 @@ export function middleware(request: NextRequest) {
 
   // If visiting login/signup/forgot-password while already authenticated -> redirect to /dashboard
   if ((pathname === '/login' || pathname === '/signup' || pathname === '/forgot-password') && hasApexSession) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    return NextResponse.redirect(new URL('https://atomic-apex-creator-studio.lovable.app'));
   }
 
   return NextResponse.next();

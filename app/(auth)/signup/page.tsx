@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/useAuthStore';
 import { triggerConfetti } from '@/lib/utils';
+import { ATOMIC_LINKS } from '@/lib/constants/links';
 
 function GoogleIcon({ className = 'h-4 w-4' }: { className?: string }) {
   return (
@@ -64,7 +65,7 @@ export default function SignUpPage() {
       const res = await signInWithGoogle();
       if (res.success) {
         triggerConfetti();
-        window.location.href = '/dashboard';
+        window.location.href = ATOMIC_LINKS.creatorStudio;
       } else {
         setErrorMsg(res.error || 'Failed to authenticate with Google.');
         setIsGoogleLoading(false);
@@ -106,7 +107,7 @@ export default function SignUpPage() {
         triggerConfetti();
         setSuccessNotice(true);
         setTimeout(() => {
-          window.location.href = '/dashboard';
+          window.location.href = ATOMIC_LINKS.creatorStudio;
         }, 1500);
       } else {
         setErrorMsg(res.error || 'Failed to create account.');
